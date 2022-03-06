@@ -1,5 +1,3 @@
-
-```
 # MoneyMachine
 Algorithmic crypto trading for market stability and personal profit
 
@@ -83,4 +81,3 @@ SAM 2/19/22
     final_acct_value = MoneyMachine( exchange_address, acct_address, manager_address, Asset, Benchmark, Gaussian_window_length, model_type, PID_parameters )
 
 ### END Section: Wrappers
-```
