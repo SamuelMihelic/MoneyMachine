@@ -7,6 +7,8 @@ SAM 2/19/22
 
 ### BEGIN Section: Control Loop
 #### Import Data:
+            # https://algotrading101.com/learn/kucoin-api-guide/
+
             # Checking price hisotry
             history_start_date = current_date - Gaussian_window_length * five_or_six # Gaussian is approx. zer0 past z-score of 5 or 6
 
