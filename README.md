@@ -1,6 +1,7 @@
 # MoneyMachine
 Algorithmic crypto trading for market stability and personal profit
 
+According to the [efficient market hypothesis](https://www.investopedia.com/terms/e/efficientmarkethypothesis.asp), this algorithm will not outperform a simple holding strategy... But we will put this to the test, and at the very least, this algorithm will provide price stability (denoising, not trend-shifting) if enough people adopt it.
 
 ## MoneyMachine Functions Overview:
 SAM 2/19/22
