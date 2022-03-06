@@ -21,7 +21,7 @@ SAM 2/19/22
             price                = log( price )
             recent_price_history = log( recent_price_history )
 
-#### Model price estimate (parameter fitting for the price model)
+        # Model price estimate (parameter fitting for the price model)
             # ...for the recent price history in a (Half-Gaussian) weighted window centered at current_date
             # zer0 order value (average)
             #  1st order model (exponential)
