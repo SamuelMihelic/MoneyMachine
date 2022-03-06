@@ -1,13 +1,8 @@
-# MoneyMachine
-Algorithmic crypto trading for market stability and personal profit
-
-According to [the efficient market hypothesis](https://en.wikipedia.org/wiki/Efficient-market_hypothesis) (as well as results from probability theory on [submartingales](https://en.m.wikipedia.org/wiki/Martingale_(probability_theory))), this algorithm will not outperform a simple holding strategy... But we will put this to the test, and at the very least, this algorithm will provide price stability (denoising, not trend-shifting) if enough people adopt it, through the use of [PID control](https://en.wikipedia.org/wiki/PID_controller).
-
-## MoneyMachine Functions Overview:
+# MoneyMachine Functions Overview:
 SAM 2/19/22
 
-### BEGIN Section: Control Loop
-#### Import Data:
+## BEGIN Section: Control Loop
+### Import Data:
             # operative quantity is market cap. not price, this is a more reliable quantity (more information)
 
             # https://algotrading101.com/learn/kucoin-api-guide/
@@ -21,7 +16,7 @@ SAM 2/19/22
             # most recent price
             price = recent_price_history( end )
             
-#### Data_processing:
+### Data_processing:
         # log transform the measurements (fold-change viewpoint)
             price                = log( price )
             recent_price_history = log( recent_price_history )
@@ -33,7 +28,7 @@ SAM 2/19/22
             #  2nd order model (exponential*sinusoidal)
             [ model_price, (parameter_1, parameter_2)] = price_model_fitting( model_type, Gaussian_window_length ) 
 
-#### PID responder:
+### PID responder:
         # difference between model and measurement (fold-difference because of log-transform)
             D_error = price - model_price - P_error # P_error_current - P_error_before 
             P_error = price - model_price
@@ -49,35 +44,35 @@ SAM 2/19/22
             trade_type     = sign( response_Asset_quantity - Asset_quantity ) # +1 means buy, -1 means sell
             trade_quantity =  abs( response_Asset_quantity - Asset_quantity )
             
-#### Trading (control)
+### Trading (control)
         # (Limit) Buying/Selling some amount of the target Asset (e.g. BTC) with the Benchmark asset (e.g. dollars)
             is_trade_successful  = Exchange_API.trade( exchange_address, acct_address, Asseet, Benchmark, trade_type, trade_quantity, (limit_price))
 
         # check acct value as measured against the Benchmark_Asset (e.g. gollars)
             acct_value           = Exchange_API.acct(  exchange_address, acct_address, Asset )
 
-#### Feedback to account manager
+### Feedback to account manager
             # alert user that the algo wants to buy more of the asset and running out of money, or it is losing interest in the asset
             is_email_successful = Email_Service_API( manager_address, message )
             
             # consider shorting the position if we run out of the asset
 
-#### Chill for a second:
+### Chill for a second:
             chill_duration = a_second
         
             pause( chill_duration )
         
-### END Section: Control Loop
+## END Section: Control Loop
 
-### BEGIN Section: Wrappers
+## BEGIN Section: Wrappers
 
-#### set-up (tuning):
+### set-up (tuning):
     # (iteratively) simulate the algorithm on historic data to tune the window length, and the PID controller to maximize the profit
     [ final_acct_value_log, model_type_log, window_length_log, PID_parameters_log ] = simulate_performance( start_date, end_date, Asset, Benchmark, starting_parameters, search_method, search_parameters )
     
     # consider the tax burden (long0-term vs short-term, over or under a year)
 
-#### execution ("here goes nothing"):
+### execution ("here goes nothing"):
     final_acct_value = MoneyMachine( exchange_address, acct_address, manager_address, Asset, Benchmark, Gaussian_window_length, model_type, PID_parameters )
 
-### END Section: Wrappers
+## END Section: Wrappers
