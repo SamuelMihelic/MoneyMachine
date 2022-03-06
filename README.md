@@ -34,7 +34,7 @@ SAM 2/19/22
 
 #### PID responder:
         # difference between model and measurement (fold-difference because of log-transform)
-            D_error = price - model_price - P_error
+            D_error = price - model_price - P_error # P_error_current - P_error_before 
             P_error = price - model_price
             I_error =      I_error        + P_error
 
@@ -58,6 +58,8 @@ SAM 2/19/22
 #### Feedback to account manager
             # alert user that the algo wants to buy more of the asset and running out of money, or it is losing interest in the asset
             is_email_successful = Email_Service_API( manager_address, message )
+            
+            # consider shorting the position if we run out of the asset
 
 #### Chill for a second:
             chill_duration = a_second
