@@ -7,6 +7,8 @@ SAM 2/19/22
 
 ### BEGIN Section: Control Loop
 #### Import Data:
+            # operative quantity is market cap. not price, this is a more reliable quantity (more information)
+
             # https://algotrading101.com/learn/kucoin-api-guide/
 
             # Checking price hisotry
