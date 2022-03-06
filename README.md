@@ -7,7 +7,7 @@ SAM 2/19/22
 
 ### BEGIN Section: Control Loop
 #### Import Data:
-#### Checking price hisotry
+            # Checking price hisotry
             history_start_date = current_date - Gaussian_window_length * five_or_six # Gaussian is approx. zer0 past z-score of 5 or 6
 
             # price of the Asset (e.g. BTC) for some time into the past at a certain temporal resolution (mHz) as measured against the Benchmark asset (e.g. dollars)
