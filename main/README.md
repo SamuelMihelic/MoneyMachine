@@ -13,16 +13,18 @@ SAM 2/19/22
 
 #### price of the Asset (e.g. BTC) 
 ##### for some time into the past at a certain temporal resolution (mHz) as measured against the Benchmark asset (e.g. dollars)
-   ```recent_price_history = Exchange_API.price( exchange_address, Asset, Benchmark_Asset, history_start_date, resolution ) ```
+   ```recent_price_history = Exchange_API.price( exchange_address, Asset, Benchmark_Asset, history_start_date, resolution )```
 
 #### most recent price
-  price = recent_price_history( end )
+```price = recent_price_history( end )```
 
 ### Data_processing:
 #### log transform the measurements (fold-change viewpoint)
+  ```
   price                = log( price )
   recent_price_history = log( recent_price_history )
-
+  ```
+  
 #### Model price estimate 
 ##### Parameter fitting for the price model)
 ##### for the recent price history in a 
@@ -31,7 +33,7 @@ SAM 2/19/22
 ###### 1st order model (exponential)
 ###### 2nd order model (exponential*sinusoidal)
 ###### Hybrid model that uses higher order proportional to the time constant, tau
-  [ model_price, (parameter_1, parameter_2)] = price_model_fitting( model_type, Gaussian_window_length ) 
+  ```[ model_price, (parameter_1, parameter_2)] = price_model_fitting( model_type, Gaussian_window_length )``` 
 
 ### PID responder:
 #### PID error input(s): 
