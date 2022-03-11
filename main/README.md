@@ -44,22 +44,24 @@ SAM 2/19/22
 
 #### PID response 
 ##### (inner product of errors and parameters)
-  PID_response = PID_responder( P_error, I_error, D_error, PID_parameters )
+  ```PID_response = PID_responder( P_error, I_error, D_error, PID_parameters )```
 
 #### inverse transform data
 ##### back to difference land (from ratio land), scaling the response to the account size, converting units
-  response_Asset_quantity = ( exp( PID_response ) * acct_value ) / exp( price )
+  ```response_Asset_quantity = ( exp( PID_response ) * acct_value ) / exp( price )```
 
 #### difference 
 ##### between current and response portfolio
-  trade_type     = sign( response_Asset_quantity - Asset_quantity ) # +1 means buy, -1 means sell
-  trade_quantity =  abs( response_Asset_quantity - Asset_quantity )
-
+```
+trade_type     = sign( response_Asset_quantity - Asset_quantity ) # +1 means buy, -1 means sell
+trade_quantity =  abs( response_Asset_quantity - Asset_quantity )
+```
 ### Trading (control)
 #### (Limit) Buying/Selling 
 ##### some amount of the target Asset (e.g. BTC) with the Benchmark asset (e.g. dollars)
-  is_trade_successful  = Exchange_API.trade( exchange_address, acct_address, Asseet, Benchmark, trade_type, trade_quantity, (limit_price))
-
+```
+   is_trade_successful  = Exchange_API.trade( exchange_address, acct_address, Asseet, Benchmark, trade_type, trade_quantity, (limit_price))
+```
 #### check acct value 
 ##### as measured against the Benchmark_Asset (e.g. gollars)
   acct_value           = Exchange_API.acct(  exchange_address, acct_address, Asset )
