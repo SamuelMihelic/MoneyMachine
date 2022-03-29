@@ -1,5 +1,5 @@
 # MoneyMachine
-***Algorithmic crypto trading for adopter profit and market stability
+***Algorithmic crypto trading for adopter profit and market stability***
 
 ### [GNU General Public License v3.0](LICENSE)
 
