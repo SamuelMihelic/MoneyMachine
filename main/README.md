@@ -1,6 +1,8 @@
 # MoneyMachine Functions Overview:
 SAM 2/19/22
 
+Outline of the main functions used in the **control loop** for active account management with an updated price-model comparison.
+
 ## Control Loop
 <ol>
   <li>Import Data:</li>
@@ -41,8 +43,6 @@ SAM 2/19/22
 
    <li>Chill for a second:</li>
 </ol>
-  
-END Section: Control Loop
 
 ## Wrappers
 <ul>
