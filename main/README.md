@@ -1,7 +1,7 @@
 # MoneyMachine Functions Overview:
 SAM 2/19/22
 
-BEGIN Section: Control Loop
+## Control Loop
 <ol>
   <li>Import Data:</li>
      Checking asset hisotry (e.g. BTC for last year at 1 sample / day)
@@ -44,7 +44,7 @@ BEGIN Section: Control Loop
   
 END Section: Control Loop
 
-BEGIN Section: Wrappers
+## Wrappers
 <ul>
    <li>set-up (tuning):</li>
       (iteratively) simulate the algorithm on historic data to tune the window length, and the PID controller to maximize the profit
@@ -52,5 +52,3 @@ BEGIN Section: Wrappers
 
    <li>execution ("here goes nothing"):</li>
 </ul>
-
-END Section: Wrappers
