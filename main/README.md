@@ -11,7 +11,7 @@ This README outlines the [**active account management cycle**](#Control-Loop), w
    
 2. log transform the asset history (fold-change viewpoint)
    
-3. Model price estimate</li>
+3. [Model price estimate](main/functions/price_model_fitting.py)</li>
       Parameter fitting for the price model)    
       for the recent price history in a 
       (Half-Gaussian) weighted window centered at current_date    
