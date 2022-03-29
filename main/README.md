@@ -2,6 +2,7 @@
 SAM 2/19/22
 
 ## BEGIN Section: Control Loop
+```
    Import Data:
       Checking asset hisotry (e.g. BTC for last year at 1 sample / day)
          operative quantity is market cap. not price, this is a more reliable quantity (more information)
@@ -38,13 +39,15 @@ SAM 2/19/22
       consider shorting the position if we run out of the asset
 
    Chill for a second:
+```
 ## END Section: Control Loop
 
 ## BEGIN Section: Wrappers
-
+```
    set-up (tuning):
       (iteratively) simulate the algorithm on historic data to tune the window length, and the PID controller to maximize the profit
       consider the tax burden (long0-term vs short-term, over or under a year)
 
    execution ("here goes nothing"):
+```
 ## END Section: Wrappers
