@@ -40,15 +40,13 @@ SAM 2/19/22
       consider shorting the position if we run out of the asset
 
    Chill for a second:
-```
+</ol>
 ## END Section: Control Loop
 
 ## BEGIN Section: Wrappers
-```
    set-up (tuning):
       (iteratively) simulate the algorithm on historic data to tune the window length, and the PID controller to maximize the profit
       consider the tax burden (long0-term vs short-term, over or under a year)
 
    execution ("here goes nothing"):
-```
 ## END Section: Wrappers
