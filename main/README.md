@@ -4,6 +4,9 @@ SAM 2/19/22
 This README outlines the [**active account management cycle**](#Control-Loop) as well as the wrapper scripts that execute and tune the management cycle.
 
 ## Control Loop
+1. import data
+2. asdf
+
 <ol>
   <li>Import Data:</li>
      Checking asset hisotry (e.g. BTC for last year at 1 sample / day)
