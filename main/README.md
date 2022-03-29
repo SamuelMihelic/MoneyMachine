@@ -11,7 +11,7 @@ This README outlines the [**active account management cycle**](#Control-Loop), w
    
 2. log transform the asset history (fold-change viewpoint)
    
-3. [Model price estimate](main/functions/price_model_fitting.py)</li>
+3. [Model price estimate](functions/price_model_fitting.py)</li>
       Parameter fitting for the price model)    
       for the recent price history in a 
       (Half-Gaussian) weighted window centered at current_date    
@@ -19,7 +19,7 @@ This README outlines the [**active account management cycle**](#Control-Loop), w
          1st order model (exponential)
          2nd order model (exponential*sinusoidal)
    
-4. [PID_responder.py](/main/functions/PID_responder.py)
+4. [PID_responder.py](functions/PID_responder.py)
       
       PID error input(s): 
          difference between model and measurement (fold-difference because of log-transform)
