@@ -1,6 +1,6 @@
 # MoneyMachine Functions Overview:
 SAM 2/19/22
-
+```
 ## BEGIN Section: Control Loop
 <ol>
   <li>Import Data:</li>
@@ -54,3 +54,4 @@ SAM 2/19/22
 </ul>
 
 ## END Section: Wrappers
+```
