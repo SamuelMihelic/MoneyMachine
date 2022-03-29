@@ -51,5 +51,5 @@ SAM 2/19/22
       consider the tax burden (long0-term vs short-term, over or under a year)
 
    <li>execution ("here goes nothing"):</li>
-  </ul>
+</ul>
 ## END Section: Wrappers
