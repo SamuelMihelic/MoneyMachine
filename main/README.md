@@ -1,14 +1,14 @@
 # MoneyMachine Functions Overview:
 SAM 2/19/22
 
-This README outlines the [**active account management control loop**](#Control-Loop) with an updated price-model comparison.
+This README outlines the [**active account management cycle**](#Control-Loop) as well as the wrapper scripts that execute and tune the management cycle.
 
 ## Control Loop
 <ol>
   <li>Import Data:</li>
      Checking asset hisotry (e.g. BTC for last year at 1 sample / day)
          operative quantity is market cap. not price, this is a more reliable quantity (more information)
-[API for Kucoin Exchange](https://algotrading101.com/learn/kucoin-api-guide/)
+         [API for Kucoin Exchange](https://algotrading101.com/learn/kucoin-api-guide/)
    
    <li>log transform the asset history (fold-change viewpoint)</li>
    
