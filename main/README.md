@@ -45,11 +45,11 @@ SAM 2/19/22
 ## END Section: Control Loop
 
 ## BEGIN Section: Wrappers
-  <ul>
-   <liset-up (tuning):</li>
+<ul>
+   <li>set-up (tuning):</li>
       (iteratively) simulate the algorithm on historic data to tune the window length, and the PID controller to maximize the profit
       consider the tax burden (long0-term vs short-term, over or under a year)
 
-   <liexecution ("here goes nothing"):</li>
+   <li>execution ("here goes nothing"):</li>
   </ul>
 ## END Section: Wrappers
