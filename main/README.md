@@ -1,7 +1,7 @@
 # MoneyMachine Functions Overview:
 SAM 2/19/22
 
-This README outlines the [**active account management cycle**](#Control-Loop) as well as the wrapper scripts that execute and tune the management cycle.
+This README outlines the [**active account management cycle**](#Control-Loop), which models the price and rebalances the portfolio in real-time, as well as the [Wrapper scripts](#Wrappers) that execute and tune the management cycle.
 
 ## Control Loop
 1. Import Data:
@@ -20,6 +20,7 @@ This README outlines the [**active account management cycle**](#Control-Loop) as
          2nd order model (exponential*sinusoidal)
    
 4. [PID_responder.py](/functions/PID_responder.py)
+      
       PID error input(s): 
          difference between model and measurement (fold-difference because of log-transform)
       PID response 
