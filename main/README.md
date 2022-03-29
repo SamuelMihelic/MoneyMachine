@@ -8,7 +8,7 @@ SAM 2/19/22
          operative quantity is market cap. not price, this is a more reliable quantity (more information)
          [API for Kucoin Exchange](https://algotrading101.com/learn/kucoin-api-guide/)
    
-   <li>*log transform the asset history (fold-change viewpoint)*</li>
+   <li>log transform the asset history (fold-change viewpoint)</li>
    
    <li>Model price estimate</li>
       Parameter fitting for the price model)    
@@ -45,10 +45,11 @@ SAM 2/19/22
 ## END Section: Control Loop
 
 ## BEGIN Section: Wrappers
-  </ul>
+  <ul>
    <liset-up (tuning):</li>
       (iteratively) simulate the algorithm on historic data to tune the window length, and the PID controller to maximize the profit
       consider the tax burden (long0-term vs short-term, over or under a year)
 
    <liexecution ("here goes nothing"):</li>
+  </ul>
 ## END Section: Wrappers
