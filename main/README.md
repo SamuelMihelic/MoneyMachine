@@ -50,4 +50,4 @@ This README outlines the [**active account management cycle**](#Control-Loop), w
       (iteratively) simulate the algorithm on historic data to tune the window length, and the PID controller to maximize the profit
       consider the tax burden (long0-term vs short-term, over or under a year)
 
-- execution ("here goes nothing"):</li>
+- [execution ("here goes nothing")](MoneyMachine.py):</li>
