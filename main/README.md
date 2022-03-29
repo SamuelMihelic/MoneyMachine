@@ -1,7 +1,7 @@
 # MoneyMachine Functions Overview:
 SAM 2/19/22
 
-Outline of the main functions used in the **control loop** for active account management with an updated price-model comparison.
+This README outlines the [**control loop**](#Control-Loop) for active account management with an updated price-model comparison.
 
 ## Control Loop
 <ol>
