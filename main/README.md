@@ -5,7 +5,7 @@ This README outlines the [**active account management control loop**](#Control-L
 
 ## Control Loop
 <ol>
-  <li>Import Data:</li>
+  [<li>Import Data:</li>](https://algotrading101.com/learn/kucoin-api-guide/)
      Checking asset hisotry (e.g. BTC for last year at 1 sample / day)
          operative quantity is market cap. not price, this is a more reliable quantity (more information)
          [API for Kucoin Exchange](https://algotrading101.com/learn/kucoin-api-guide/)
