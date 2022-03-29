@@ -20,7 +20,7 @@ This README outlines the [**control loop**](#Control-Loop) for active account ma
          1st order model (exponential)
          2nd order model (exponential*sinusoidal)
    
-   <li>PID responder:</li>
+   <li>[PID responder](/functions/PID_responder.py):</li>
       PID error input(s): 
          difference between model and measurement (fold-difference because of log-transform)
       PID response 
