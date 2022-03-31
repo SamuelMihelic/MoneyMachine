@@ -3,7 +3,7 @@
 
 - [GNU General Public License v3.0](LICENSE)
 - [Background](#Background)
-- [Code Overview](main/README.md)
+- [Code Overview](main/)
 - [main function](main/MoneyMachine.py)
 - [simulations](#simulations)
 - [current performance](#current-performance)
