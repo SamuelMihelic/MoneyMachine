@@ -9,7 +9,7 @@
 - [current performance](#current-performance)
 
 ## Background
-According to [the efficient market hypothesis](https://en.wikipedia.org/wiki/Efficient-market_hypothesis) (as well as results from probability theory on [submartingales](https://en.m.wikipedia.org/wiki/Martingale_(probability_theory))), this algorithm ***will not** outperform a simple holding strategy... But we will put this to the test, and at the very least, this algorithm will provide price stability (through the use of [PID control](https://en.wikipedia.org/wiki/PID_controller)) if enough people adopt it.
+According to [the efficient market hypothesis](https://en.wikipedia.org/wiki/Efficient-market_hypothesis) (as well as results from probability theory on [submartingales](https://en.m.wikipedia.org/wiki/Martingale_(probability_theory))), this algorithm ***will not*** outperform a simple holding strategy... But we will put this to the test, and at the very least, this algorithm will provide price stability (through the use of [PID control](https://en.wikipedia.org/wiki/PID_controller)) if enough people adopt it.
 
 #### simulations
 
