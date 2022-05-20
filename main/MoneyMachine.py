@@ -43,7 +43,8 @@
             PID_response = PID_responder( P_error, I_error, D_error, PID_parameters )
 
         # transform back to difference land (from ratio land), scaling the response to the account size, converting units
-            response_Asset_quantity = ( exp( PID_response ) * acct_value ) / exp( price )
+            baseline_proportion = 0.5
+            response_Asset_quantity = (( exp( PID_response ) + baseline_proportion ) * acct_value ) / exp( price )
 
         # difference between current and response portfolio
             trade_type     = sign( response_Asset_quantity - Asset_quantity ) # +1 means buy, -1 means sell
