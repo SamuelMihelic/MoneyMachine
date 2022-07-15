@@ -31,7 +31,7 @@
             # zer0 order value (average)
             #  1st order model (exponential)
             #  2nd order model (exponential*sinusoidal)
-            [ model_price, (parameter_1, parameter_2)] = price_model_fitting( model_type, Gaussian_window_length ) 
+            [ model_price, (parameter_1, parameter_2)] = price_model_fitting( recemt_preice_history, model_type, Gaussian_window_length ) 
 
 #### PID responder:
         # difference between model and measurement (fold-difference because of log-transform)
