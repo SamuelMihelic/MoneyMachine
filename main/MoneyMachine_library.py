@@ -9,6 +9,8 @@ class exchange:
     if name is 'local': # for historical training purposes
       def update( self, local_data ):
         self.value = local_data.__next__() # pull next datapoint from training data
+      def trading( self )
+        self.acct_balance = balance
         
     if name is 'kucoin':
       self.url   = 'www....'
