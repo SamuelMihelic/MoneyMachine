@@ -1,9 +1,9 @@
 class model:
-  def __init__( self, model_order, time_constant )
+  def __init__( self, model_order, time_constant ):
     self.tau   = time_constant
     self.order = model_order
     
-  def fitting( self, data )
+  def fitting( self, data ):
     # time-weighted windowing with a half-Gaussian with standard deviation equal to the time constant
     window_weights       = [ exp(-(t-data.times(-1))**2/self.tau**2/2) for t in zip( data.times                 )]
     
@@ -13,20 +13,20 @@ class model:
     
     # calculate second moment?
     
-    if     self.order is 0 # 'zero_order'
+    if     self.order is 0: # 'zero_order'
       return weighted_average
-    elseif self.order is 1 # (linear here... exponential after inverse-log transform)
-    elseif self.order is 2 # add the      most dominant harmonic
-    elseif self.order is 3 # add the next-most dominant harmonic
+    elseif self.order is 1: # (linear here... exponential after inverse-log transform)
+    elseif self.order is 2: # add the      most dominant harmonic
+    elseif self.order is 3: # add the next-most dominant harmonic
     else
       # throw error
       
 class data:
-  def __init__( self, values, times )
+  def __init__( self, values, times ):
     self.values = values
     self._times =  times
 
-  def update( self, value, time )
+  def update( self, value, time ):
     self.values.append(value)
     self._times.append( time)
     
