@@ -29,7 +29,7 @@ class data:
   def update( self, value, time )
     self.values.append(value)
     self._times.append( time)
-
+    
 class PID:
   def __init__( self, PID_constants ):
     self.constants =  PID_constants
