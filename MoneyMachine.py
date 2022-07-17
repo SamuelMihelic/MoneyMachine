@@ -15,7 +15,7 @@ exchange1 = mm.exchange( 'kucoin', account_credentials, 'BTC', 'USD' )
 
 baseline_proportion = 0.5 # portion of total benchmark invested
 
-constants = ( 1, 1, 1 ) # PID response constants (to be learned from historical testing)
+constants = ( -1, -1, -1 ) # PID response constants (to be learned from historical testing)
 PID1 = mm.PID( constants ) # try multiple PIDs and average their outputs
 
 error1 = mm.error() # the error history will depend on the time elapsed during the control loop
