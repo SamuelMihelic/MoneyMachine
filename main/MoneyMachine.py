@@ -5,24 +5,35 @@
 
 ## MoneyMachine Functions Overview:
             # SAM 2/19/22
+
 import MoneyMachine_library as mm
+import time
 
-constants = ( 1, 1, 1 ) # PID response constants
+baseline_proportion = 0.5
 
-PID1 = mm.PID( constants )
+constants = ( 1, 1, 1 ) # PID response constants (to be learned from historical testing)
+PID1 = mm.PID( constants ) # try multiple PIDs and average their outputs
 
-error1 = mm.error
+error1 = mm.error() # the error history will depend on the time elapsed during the control loop
+            
+data1 = mm.data( values, times ) # e.g. values in $$, times in minutes
+
+Gaussian_window_length = 60 * 24 * 7 # (one week in minutes), sliding window looking into the past from current
+
+model1 == mm.model( 'zero_order', Gaussian_window_length )
+            
+time0 = time.process_time()
             
 ### BEGIN Section: Control Loop
 #### Import Data:
-            # operative quantity is market cap. not price, this is a more reliable quantity (more information)
+            # operative quantity is market cap (MCap). not price, this is a more reliable quantity (more information)
 
             # https://algotrading101.com/learn/kucoin-api-guide/
 
-            # Checking price hisotry
+            # Checking MCap hisotry
             data_length = current_date - Gaussian_window_length * five_or_six # Gaussian is approx. zer0 past z-score of 5 or 6
 
-            # price of the Asset (e.g. BTC) for some time into the past at a certain temporal resolution (mHz) as measured against the Benchmark asset (e.g. dollars)
+            # MCap of the Asset (e.g. BTC) for some time into the past at a certain temporal resolution (mHz) as measured against the Benchmark asset (e.g. dollars)
             recent_price_history = Exchange_API.price( exchange_address, Asset, Benchmark_Asset, data_length, resolution )
 
             # most recent price
@@ -38,17 +49,22 @@ error1 = mm.error
             # zer0 order value (average)
             #  1st order model (exponential)
             #  2nd order model (exponential*sinusoidal)
-            [ model_price, (parameter_1, parameter_2)] = price_model_fitting( recemt_preice_history, model_type, Gaussian_window_length ) 
+            [ model_price, (parameter_1, parameter_2)] = model1.fitting( recemt_preice_history, model_type, Gaussian_window_length ) 
 
 #### PID responder:
+        # measure the time that has elapsed since last error measurement
+        time1 = time.process_time()
+        elapsed_time = time1-time0
+        time0 = time1
+
         # difference between model and measurement (fold-difference because of log-transform)
-            error1.update( price - model_price, chill_duration )
+            error1.update( price - model_price, elapsed_time )
 
         # PID response (inner product of errors and parameters)
             PID_response = PID1.response
 
         # transform back to difference land (from ratio land), scaling the response to the account size, converting units
-            baseline_proportion = 0.5
+            
             response_Asset_quantity = (( exp( PID_response ) + baseline_proportion ) * acct_value ) / exp( price )
 
         # difference between current and response portfolio
