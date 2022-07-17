@@ -24,7 +24,7 @@ data_duration = 6 * Gaussian_window_length # Gaussian is approx. zer0 past z-sco
 
 resolution = 1e-3
 
-values, times = exchange.data( data_duration, resolution )
+values, times = exchange1.data( data_duration, resolution )
 
 data1 = mm.data( values, times ) # e.g. values in $$, times in minutes
 
@@ -42,8 +42,9 @@ time0 = time.process_time()
             # operative quantity is market cap (MCap). not price, this is a more reliable quantity (more information)
 
             # MCap of the Asset (e.g. BTC) against the benchmark (e.g. USD)
-            market_cap = exchange.value
+            market_cap, read_time = exchange.value
    
+            data1.update( market_cap, read_time )
 #### Data_processing:
         # log transform the measurements (fold-change viewpoint)
             market_cap                = log(        market_cap         )
@@ -54,8 +55,8 @@ time0 = time.process_time()
             # zer0 order value (average)
             #  1st order model (exponential)
             #  2nd order model (exponential*sinusoidal)
-            [ model_price, (parameter_1, parameter_2)] = model1.fitting( recent_market_cap_history, model_type, Gaussian_window_length ) 
-
+            # [ model_market_cap, (parameter_1, parameter_2)] = model1.fitting( data ) 
+            model_market_cap = model1.fitting( data1 ) 
 #### PID responder:
         # measure the time that has elapsed since last error measurement
         time1 = time.process_time()
