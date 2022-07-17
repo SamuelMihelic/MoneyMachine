@@ -7,8 +7,8 @@ class PID:
     
   def response( self, error ):
     response = self.P * error.P \
-               self.I * error.I \
-               self.D * error.D
+             + self.I * error.I \
+             + self.D * error.D
     return response
   
 class error:
