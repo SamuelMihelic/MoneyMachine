@@ -32,7 +32,7 @@ class data:
     self.values.append(value)
     self._times.append( time)
     
-  def log_transform( self )
+  def log_transform( self ):
     return [ log(v) for v in zip( self.values )]
   
 class model:
