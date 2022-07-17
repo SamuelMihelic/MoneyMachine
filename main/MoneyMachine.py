@@ -31,10 +31,10 @@ time0 = time.process_time()
             # https://algotrading101.com/learn/kucoin-api-guide/
 
             # Checking MCap hisotry
-            data_length = current_date - Gaussian_window_length * five_or_six # Gaussian is approx. zer0 past z-score of 5 or 6
+            data_duration = 6 * Gaussian_window_length # Gaussian is approx. zer0 past z-score of 5 or 6
 
             # MCap of the Asset (e.g. BTC) for some time into the past at a certain temporal resolution (mHz) as measured against the Benchmark asset (e.g. dollars)
-            recent_price_history = Exchange_API.price( exchange_address, Asset, Benchmark_Asset, data_length, resolution )
+            recent_price_history = Exchange_API.price( exchange_address, Asset, Benchmark_Asset, data_duration, resolution )
 
             # most recent price
             price = recent_price_history( end )
@@ -61,11 +61,11 @@ time0 = time.process_time()
             error1.update( price - model_price, elapsed_time )
 
         # PID response (inner product of errors and parameters)
-            PID_response = PID1.response
+            PID1.update
 
         # transform back to difference land (from ratio land), scaling the response to the account size, converting units
             
-            response_Asset_quantity = (( exp( PID_response ) + baseline_proportion ) * acct_value ) / exp( price )
+            response_Asset_quantity = (( exp( PID1.response ) + baseline_proportion ) * acct_value ) / exp( price )
 
         # difference between current and response portfolio
             trade_type     = sign( response_Asset_quantity - Asset_quantity ) # +1 means buy, -1 means sell
