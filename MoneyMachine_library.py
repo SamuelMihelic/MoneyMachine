@@ -7,17 +7,23 @@ class exchange: # !!! this class unfinished SAM 7/17/22
     self.bsset = benchmark_asset
   
   if name is 'local': # for historical training purposes
-    def update( self, market_cap ):
-      self.log_market_cap = log( market_cap ) # pull next datapoint from training data
+    # read from local_file (= 'market_cap_history.txt')
+    def data_extraction( self, local_file, data_duration, resolution, end_time ):
+      # expand this function here
+
+      self.value_history = values
+      self._time_history =  times
+
+    def update( self, log_market_cap ):
+      self.log_market_cap = log_market_cap # pull next datapoint from training data
     
     def trade( self, type, quantity )
       self.asset_by_benchmark = self.asset_by_benchmark + type * quantity # type +1 means buy, type -1 means sell (amount is in units of asset)
       return asset_by_benchmark > 0 & asset_by_benchmark < 1 # true if did not run out of asset or benchmark funds
     
     def log_market_cap_history( data_duration, resolution, end_time )
-      # read from local file ('market_cap_history.txt')
-      values, times = data_extraction( 'market_cap_history.txt', data_duration, resolution, end_time )
-      # expand this function here
+      
+      
       
       # log transform the values
       values = [ log(v) for v in zip( values )]
