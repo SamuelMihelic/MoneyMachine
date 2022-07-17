@@ -17,41 +17,44 @@ constants = ( 1, 1, 1 ) # PID response constants (to be learned from historical 
 PID1 = mm.PID( constants ) # try multiple PIDs and average their outputs
 
 error1 = mm.error() # the error history will depend on the time elapsed during the control loop
-            
+
+## Checking MCap hisotry
+### for some time into the past at a certain temporal resolution (e.g. mHz) as measured against the Benchmark asset (e.g. dollars)
+data_duration = 6 * Gaussian_window_length # Gaussian is approx. zer0 past z-score of 5 or 6
+
+resolution = 1e-3
+
+values, times = exchange.data( data_duration, resolution )
+
 data1 = mm.data( values, times ) # e.g. values in $$, times in minutes
 
 Gaussian_window_length = 60 * 24 * 7 # (one week in minutes), sliding window looking into the past from current
 
-model1 == mm.model( 'zero_order', Gaussian_window_length )
+model_order = 0
+
+model1 == mm.model( model_order, Gaussian_window_length )
             
 time0 = time.process_time()
-            
+
 ### BEGIN Section: Control Loop
 #### Import Data:
+            exchange.update
             # operative quantity is market cap (MCap). not price, this is a more reliable quantity (more information)
 
-            # https://algotrading101.com/learn/kucoin-api-guide/
-
-            # Checking MCap hisotry
-            data_duration = 6 * Gaussian_window_length # Gaussian is approx. zer0 past z-score of 5 or 6
-
-            # MCap of the Asset (e.g. BTC) for some time into the past at a certain temporal resolution (mHz) as measured against the Benchmark asset (e.g. dollars)
-            recent_price_history = Exchange_API.price( exchange_address, Asset, Benchmark_Asset, data_duration, resolution )
-
-            # most recent price
-            price = recent_price_history( end )
-            
+            # MCap of the Asset (e.g. BTC) against the benchmark (e.g. USD)
+            market_cap = exchange.value
+   
 #### Data_processing:
         # log transform the measurements (fold-change viewpoint)
-            price                = log( price )
-            recent_price_history = log( recent_price_history )
+            market_cap                = log(        market_cap         )
+            recent_market_cap_history = log( recent_market_cap_history )
 
         # Model price estimate (parameter fitting for the price model)
             # ...for the recent price history in a (Half-Gaussian) weighted window centered at current_date
             # zer0 order value (average)
             #  1st order model (exponential)
             #  2nd order model (exponential*sinusoidal)
-            [ model_price, (parameter_1, parameter_2)] = model1.fitting( recemt_preice_history, model_type, Gaussian_window_length ) 
+            [ model_price, (parameter_1, parameter_2)] = model1.fitting( recent_market_cap_history, model_type, Gaussian_window_length ) 
 
 #### PID responder:
         # measure the time that has elapsed since last error measurement
@@ -60,7 +63,7 @@ time0 = time.process_time()
         time0 = time1
 
         # difference between model and measurement (fold-difference because of log-transform)
-            error1.update( price - model_price, elapsed_time )
+            error1.update( market_cap - model_market_cap, elapsed_time )
 
         # PID response (inner product of errors and parameters)
             PID1.update
@@ -75,10 +78,10 @@ time0 = time.process_time()
             
 #### Trading (control)
         # (Limit) Buying/Selling some amount of the target Asset (e.g. BTC) with the Benchmark asset (e.g. dollars)
-            is_trade_successful  = Exchange_API.trade( exchange_address, acct_address, Asseet, Benchmark, trade_type, trade_quantity, (limit_price))
+            is_trade_successful  = exchange.trade( exchange_address, acct_address, Asseet, Benchmark, trade_type, trade_quantity, (limit_price))
 
         # check acct value as measured against the Benchmark_Asset (e.g. gollars)
-            acct_value           = Exchange_API.acct(  exchange_address, acct_address, Asset )
+            acct_value           = exchange.acct_balance
 
 #### Feedback to account manager
             # alert user that the algo wants to buy more of the asset and running out of money, or it is losing interest in the asset
