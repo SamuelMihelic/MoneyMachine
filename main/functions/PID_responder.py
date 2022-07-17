@@ -1,4 +1,11 @@
-output = PID_responder( errors, constants, time_since_last_data )
+class PID_responder:
+  def __init__(self, PID_constants ):
+    self.constants = PID_constants
+  def update( self, error_history ):
+    
+
+
+def PID_responder( errors, constants, time_since_last_data )
 # SAM 3/11/22
 # 
 # this function is the PID response portion of the PID controller.
@@ -13,3 +20,5 @@ errors.I = errors.I * time_since_last_data
        # + errors.P * constants.P ...
        # + errors.I * constants.I    
 output = dot_product( errors, constants )
+
+return output
