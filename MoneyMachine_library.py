@@ -5,23 +5,23 @@ class exchange: # !!! this class unfinished SAM 7/17/22
     
     self.asset =    target_asset
     self.bsset = benchmark_asset
-    
-    if name is 'local': # for historical training purposes
-      def update( self, value ):
-        self.value = value # pull next datapoint from training data
-      def trade( self, type, amount )
-        self.balance = self.balance + type * amount # type +1 means buy, type -1 means sell (amount is in units of asset)
-        
-    if name is 'kucoin':
-      # https://algotrading101.com/learn/kucoin-api-guide/
-      self.url   = 'www....'
-      def update( self ):
-        # Market cap of the target as measured against the benchmark
-        # pull the current value from the exchange using API
-        self.value = kucoinAPI()
-      def trade( self, type, amount )
-        
-    if name is 'coinbase':
+  
+  if name is 'local': # for historical training purposes
+    def update( self, value ):
+      self.value = value # pull next datapoint from training data
+    def trade( self, type, amount )
+      self.balance = self.balance + type * amount # type +1 means buy, type -1 means sell (amount is in units of asset)
+
+  if name is 'kucoin':
+    # https://algotrading101.com/learn/kucoin-api-guide/
+    self.url   = 'www....'
+    def update( self ):
+      # Market cap of the target as measured against the benchmark
+      # pull the current value from the exchange using API
+      self.value = kucoinAPI()
+    def trade( self, type, amount )
+
+  if name is 'coinbase':
     
 class data:
   def __init__( self, values, times ):
@@ -31,6 +31,9 @@ class data:
   def update( self, value, time ):
     self.values.append(value)
     self._times.append( time)
+    
+  def log_transform( self )
+    return [ log(v) for v in zip( self.values )]
   
 class model:
   def __init__( self, model_order, time_constant ):
