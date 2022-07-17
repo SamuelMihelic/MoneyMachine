@@ -9,7 +9,9 @@
 import MoneyMachine_library as mm
 import time
 
-exchange1 = mm.exchange( 'kucoin', 'BTC', 'USD' )
+# account_credentials = # data structure
+
+exchange1 = mm.exchange( 'kucoin', account_credentials, 'BTC', 'USD' )
 
 baseline_proportion = 0.5
 
@@ -24,7 +26,7 @@ data_duration = 6 * Gaussian_window_length # Gaussian is approx. zer0 past z-sco
 
 resolution = 1e-3
 
-values, times = exchange1.data( data_duration, resolution )
+values, times = exchange1.log_market_cap_history( data_duration, resolution )
 
 data1 = mm.data( values, times ) # e.g. values in $$, times in minutes
 
@@ -38,51 +40,52 @@ time0 = time.process_time()
 
 ### BEGIN Section: Control Loop
 #### Import Data:
+while True # infinite loop
             exchange.update
             # operative quantity is market cap (MCap). not price, this is a more reliable quantity (more information)
 
             # MCap of the Asset (e.g. BTC) against the benchmark (e.g. USD)
-            market_cap, read_time = exchange.value
-   
-            data1.update( market_cap, read_time )
-#### Data_processing:
-        # log transform the measurements (fold-change viewpoint)
-            market_cap                = log(        market_cap         )
-            recent_market_cap_history = log( recent_market_cap_history )
+            # log transform the measurements (fold-change viewpoint)
+            log_market_cap = exchange1.log_market_cap
 
+            # measure the time that has elapsed since last error measurement
+            time1 = time.process_time()
+            elapsed_time = time1-time0
+            time0 = time1
+
+            data1.update( log_market_cap, time0 )
+
+#### Data_processing:
+        
         # Model price estimate (parameter fitting for the price model)
             # ...for the recent price history in a (Half-Gaussian) weighted window centered at current_date
             # zer0 order value (average)
             #  1st order model (exponential)
             #  2nd order model (exponential*sinusoidal)
             # [ model_market_cap, (parameter_1, parameter_2)] = model1.fitting( data ) 
-            model_market_cap = model1.fitting( data1 ) 
+            log_model_market_cap = model1.fitting( data1 ) 
+            
 #### PID responder:
-        # measure the time that has elapsed since last error measurement
-        time1 = time.process_time()
-        elapsed_time = time1-time0
-        time0 = time1
 
         # difference between model and measurement (fold-difference because of log-transform)
-            error1.update( market_cap - model_market_cap, elapsed_time )
+            error1.update( log_market_cap - log_model_market_cap, elapsed_time )
 
         # PID response (inner product of errors and parameters)
-            PID1.update
+            PID1.update( error1 )
 
-        # transform back to difference land (from ratio land), scaling the response to the account size, converting units
-            
-            response_Asset_quantity = (( exp( PID1.response ) + baseline_proportion ) * acct_value ) / exp( price )
+        # transform back to ratio land (from difference land), scaling the response to the account size, converting to benchmark units
+            response_asset_by_benchmark = exp( PID1.response ) * baseline_proportion * exchange1.asset_by_benchmark
 
         # difference between current and response portfolio
-            trade_type     = sign( response_Asset_quantity - Asset_quantity ) # +1 means buy, -1 means sell
-            trade_quantity =  abs( response_Asset_quantity - Asset_quantity )
+            trade_type     = sign( response_asset_by_benchmark - asset_by_benchmark ) # +1 means buy, -1 means sell
+            trade_quantity =  abs( response_asset_by_benchmark - asset_by_benchmark )
             
 #### Trading (control)
-        # (Limit) Buying/Selling some amount of the target Asset (e.g. BTC) with the Benchmark asset (e.g. dollars)
-            is_trade_successful  = exchange.trade( exchange_address, acct_address, Asseet, Benchmark, trade_type, trade_quantity, (limit_price))
+        # Buying/Selling some amount of the target Asset (e.g. BTC) with the Benchmark asset (e.g. dollars)
+            is_trade_successful = exchange1.trade( trade_type, trade_quantity )
 
         # check acct value as measured against the Benchmark_Asset (e.g. gollars)
-            acct_value           = exchange.acct_balance
+            asset_by_benchmark = exchange1.asset_by_benchmark
 
 #### Feedback to account manager
             # alert user that the algo wants to buy more of the asset and running out of money, or it is losing interest in the asset
