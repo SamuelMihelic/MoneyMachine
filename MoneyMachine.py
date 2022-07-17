@@ -13,7 +13,7 @@ import time
 
 exchange1 = mm.exchange( 'kucoin', account_credentials, 'BTC', 'USD' )
 
-baseline_proportion = 0.5
+baseline_proportion = 0.5 # portion of total benchmark invested
 
 constants = ( 1, 1, 1 ) # PID response constants (to be learned from historical testing)
 PID1 = mm.PID( constants ) # try multiple PIDs and average their outputs
@@ -39,11 +39,13 @@ model1 == mm.model( model_order, Gaussian_window_length )
 time0 = time.process_time()
 
 ### BEGIN Section: Control Loop
-#### Import Data:
 while True # infinite loop
-            exchange.update
-            # operative quantity is market cap (MCap). not price, this is a more reliable quantity (more information)
 
+#### Import Data:
+
+            # operative quantity is market cap (MCap). not price, this is a more reliable quantity (more information)
+            exchange1.update
+            
             # MCap of the Asset (e.g. BTC) against the benchmark (e.g. USD)
             # log transform the measurements (fold-change viewpoint)
             log_market_cap = exchange1.log_market_cap
@@ -57,7 +59,7 @@ while True # infinite loop
 
 #### Data_processing:
         
-        # Model price estimate (parameter fitting for the price model)
+            # Model price estimate (parameter fitting for the price model)
             # ...for the recent price history in a (Half-Gaussian) weighted window centered at current_date
             # zer0 order value (average)
             #  1st order model (exponential)
@@ -67,34 +69,35 @@ while True # infinite loop
             
 #### PID responder:
 
-        # difference between model and measurement (fold-difference because of log-transform)
+            # difference between model and measurement (fold-difference because of log-transform)
             error1.update( log_market_cap - log_model_market_cap, elapsed_time )
 
-        # PID response (inner product of errors and parameters)
+            # PID response (inner product of errors and parameters)
             PID1.update( error1 )
 
-        # transform back to ratio land (from difference land), scaling the response to the account size, converting to benchmark units
+            # transform back to ratio land (from difference land), scaling the response to the account size, converting to benchmark units
             response_asset_by_benchmark = exp( PID1.response ) * baseline_proportion * exchange1.asset_by_benchmark
 
-        # difference between current and response portfolio
+            # difference between current and response portfolio
             trade_type     = sign( response_asset_by_benchmark - asset_by_benchmark ) # +1 means buy, -1 means sell
             trade_quantity =  abs( response_asset_by_benchmark - asset_by_benchmark )
             
 #### Trading (control)
-        # Buying/Selling some amount of the target Asset (e.g. BTC) with the Benchmark asset (e.g. dollars)
+            # Buying/Selling some amount of the target Asset (e.g. BTC) with the Benchmark asset (e.g. dollars)
             is_trade_successful = exchange1.trade( trade_type, trade_quantity )
 
-        # check acct value as measured against the Benchmark_Asset (e.g. gollars)
+            # check acct value as measured against the Benchmark_Asset (e.g. dollars)
             asset_by_benchmark = exchange1.asset_by_benchmark
 
 #### Feedback to account manager
             # alert user that the algo wants to buy more of the asset and running out of money, or it is losing interest in the asset
-            is_email_successful = Email_Service_API( manager_address, message )
+            if ~is_trade_successful
+                        # consider shorting the position if we run out of the asset
+                        is_email_successful = Email_Service_API( manager_address, message )
             
-            # consider shorting the position if we run out of the asset
-
+                        
 #### Chill for a second:
-            chill_duration = a_second
+            chill_duration = 1 # minute
         
             pause( chill_duration )
         
