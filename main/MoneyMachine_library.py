@@ -1,3 +1,30 @@
+class exchange:
+  def __init__( self, exchange_name, target_asset, benchmark_asset ):
+    
+    self.name  =   exchange_name
+    
+    self.asset =    target_asset
+    self.bsset = benchmark_asset
+    
+    if name is 'kucoin':
+      self.url   = 'www....'
+      def update( self ):
+    # Market cap of the target as measured against the benchmark
+    # pull the current value from the exchange using API
+    self.value = value
+    if name is 'coinbase':
+    
+  
+    
+class data:
+  def __init__( self, values, times, asset, benchmark ):
+    self.values = values
+    self._times =  times
+
+  def update( self, value, time ):
+    self.values.append(value)
+    self._times.append( time)
+  
 class model:
   def __init__( self, model_order, time_constant ):
     self.tau   = time_constant
@@ -20,26 +47,6 @@ class model:
     elseif self.order is 3: # add the next-most dominant harmonic
     else
       # throw error
-      
-class data:
-  def __init__( self, values, times ):
-    self.values = values
-    self._times =  times
-
-  def update( self, value, time ):
-    self.values.append(value)
-    self._times.append( time)
-    
-class PID:
-  def __init__( self, PID_constants ):
-    self.constants =  PID_constants
-    
-  def response( self, error ):
-    response = self.P * error.P \
-             + self.I * error.I \
-             + self.D * error.D
-             
-    return response
   
 class error:
   def __init__( self ):
@@ -51,3 +58,12 @@ class error:
     self.D = (      P_error - self.P ) / duration # P_error_current - P_error_before
     self.P =        P_error
     self.I = ( self.I_error + self.P ) * duration
+
+class PID:
+  def __init__( self, PID_constants ):
+    self.constants =  PID_constants
+    
+  def update( self, error ):
+    self.response = self.P * error.P \
+                  + self.I * error.I \
+                  + self.D * error.D
