@@ -5,7 +5,14 @@
 
 ## MoneyMachine Functions Overview:
             # SAM 2/19/22
+import MoneyMachine_library as mm
 
+constants = ( 1, 1, 1 ) # PID response constants
+
+PID1 = mm.PID( constants )
+
+error1 = mm.error
+            
 ### BEGIN Section: Control Loop
 #### Import Data:
             # operative quantity is market cap. not price, this is a more reliable quantity (more information)
@@ -13,10 +20,10 @@
             # https://algotrading101.com/learn/kucoin-api-guide/
 
             # Checking price hisotry
-            history_start_date = current_date - Gaussian_window_length * five_or_six # Gaussian is approx. zer0 past z-score of 5 or 6
+            data_length = current_date - Gaussian_window_length * five_or_six # Gaussian is approx. zer0 past z-score of 5 or 6
 
             # price of the Asset (e.g. BTC) for some time into the past at a certain temporal resolution (mHz) as measured against the Benchmark asset (e.g. dollars)
-            recent_price_history = Exchange_API.price( exchange_address, Asset, Benchmark_Asset, history_start_date, resolution )
+            recent_price_history = Exchange_API.price( exchange_address, Asset, Benchmark_Asset, data_length, resolution )
 
             # most recent price
             price = recent_price_history( end )
@@ -35,12 +42,10 @@
 
 #### PID responder:
         # difference between model and measurement (fold-difference because of log-transform)
-            D_error = price - model_price - P_error # P_error_current - P_error_before 
-            P_error = price - model_price
-            I_error =      I_error        + P_error
+            error1.update( price - model_price, chill_duration )
 
         # PID response (inner product of errors and parameters)
-            PID_response = PID_responder( P_error, I_error, D_error, PID_parameters )
+            PID_response = PID1.response
 
         # transform back to difference land (from ratio land), scaling the response to the account size, converting units
             baseline_proportion = 0.5
