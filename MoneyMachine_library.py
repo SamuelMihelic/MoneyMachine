@@ -1,5 +1,5 @@
 class exchange: # !!! this class unfinished SAM 7/17/22
-  def __init__( self, exchange_name, target_asset, benchmark_asset ):
+  def __init__( self, exchange_name, account_credentials, target_asset, benchmark_asset ):
     
     self.name  =   exchange_name
     
@@ -7,10 +7,22 @@ class exchange: # !!! this class unfinished SAM 7/17/22
     self.bsset = benchmark_asset
   
   if name is 'local': # for historical training purposes
-    def update( self, value ):
-      self.value = value # pull next datapoint from training data
-    def trade( self, type, amount )
-      self.balance = self.balance + type * amount # type +1 means buy, type -1 means sell (amount is in units of asset)
+    def update( self, market_cap ):
+      self.log_market_cap = log( market_cap ) # pull next datapoint from training data
+    
+    def trade( self, type, quantity )
+      self.asset_by_benchmark = self.asset_by_benchmark + type * quantity # type +1 means buy, type -1 means sell (amount is in units of asset)
+      return asset_by_benchmark > 0 & asset_by_benchmark < 1 # true if did not run out of asset or benchmark funds
+    
+    def log_market_cap_history( data_duration, resolution, end_time )
+      # read from local file ('market_cap_history.txt')
+      values, times = data_extraction( 'market_cap_history.txt', data_duration, resolution, end_time )
+      # expand this function here
+      
+      # log transform the values
+      values = [ log(v) for v in zip( values )]
+      
+      return values, times
 
   if name is 'kucoin':
     # https://algotrading101.com/learn/kucoin-api-guide/
@@ -18,8 +30,9 @@ class exchange: # !!! this class unfinished SAM 7/17/22
     def update( self ):
       # Market cap of the target as measured against the benchmark
       # pull the current value from the exchange using API
-      self.value = kucoinAPI()
+      self.log_market_cap = kucoinAPI()
     def trade( self, type, amount )
+      return is_trade_successfull
 
   if name is 'coinbase':
     
@@ -31,9 +44,6 @@ class data:
   def update( self, value, time ):
     self.values.append(value)
     self._times.append( time)
-    
-  def log_transform( self ):
-    return [ log(v) for v in zip( self.values )]
   
 class model:
   def __init__( self, model_order, time_constant ):
@@ -42,11 +52,11 @@ class model:
     
   def fitting( self, data ):
     # time-weighted windowing with a half-Gaussian with standard deviation equal to the time constant
-    window_weights       = [ exp(-(t-data.times(-1))**2/self.tau**2/2) for t in zip( data.times                 )]
+    window_weights   = [ exp(-(t-data.times(-1))**2/self.tau**2/2) for t in zip( data.times )]
     
-    w_sum = window_weights.sum
-    windowed_data_values = [ v * w     for v,w in zip( data.values,window_weights )]
-    weighted_average     = [ w / w_sum for   w in zip(    windowed_data_values    )]
+    weighted_values  = [ v * w     for v,w in zip( data.values,window_weights )]
+    
+    weighted_average = weighted_values.sum / window_weights.sum
     
     # calculate second moment?
     
