@@ -1,4 +1,4 @@
-class exchange:
+class exchange: # !!! this class unfinished SAM 7/17/22
   def __init__( self, exchange_name, target_asset, benchmark_asset ):
     
     self.name  =   exchange_name
@@ -7,21 +7,24 @@ class exchange:
     self.bsset = benchmark_asset
     
     if name is 'local': # for historical training purposes
-      def update( self, local_data ):
-        self.value = local_data.__next__() # pull next datapoint from training data
-      def trading( self )
-        self.acct_balance = balance
+      def update( self, value ):
+        self.value = value # pull next datapoint from training data
+      def trade( self, type, amount )
+        self.balance = self.balance + type * amount # type +1 means buy, type -1 means sell (amount is in units of asset)
         
     if name is 'kucoin':
+      # https://algotrading101.com/learn/kucoin-api-guide/
       self.url   = 'www....'
       def update( self ):
         # Market cap of the target as measured against the benchmark
         # pull the current value from the exchange using API
         self.value = kucoinAPI()
+      def trade( self, type, amount )
+        
     if name is 'coinbase':
     
 class data:
-  def __init__( self, values, times, asset, benchmark ):
+  def __init__( self, values, times ):
     self.values = values
     self._times =  times
 
