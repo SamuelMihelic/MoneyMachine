@@ -6,15 +6,17 @@ class exchange:
     self.asset =    target_asset
     self.bsset = benchmark_asset
     
+    if name is 'local': # for historical training purposes
+      def update( self, local_data ):
+        self.value = local_data.__next__() # pull next datapoint from training data
+        
     if name is 'kucoin':
       self.url   = 'www....'
       def update( self ):
-    # Market cap of the target as measured against the benchmark
-    # pull the current value from the exchange using API
-    self.value = value
+        # Market cap of the target as measured against the benchmark
+        # pull the current value from the exchange using API
+        self.value = kucoinAPI()
     if name is 'coinbase':
-    
-  
     
 class data:
   def __init__( self, values, times, asset, benchmark ):
