@@ -1,14 +1,22 @@
 class model:
   def __init__( self, type, time_constant )
-      self.tau  = time_constant
-      self.type = type
+    self.tau  = time_constant
+    self.type = type
     
   def fitting( self, data )
     # time-weighted windowing with a half-Gaussian
-    weighted_data_values = data.values 
-  
+    windowed_data_values = [v*exp(-(t-data.times(-1))**2/tau**2/2) for v,t in zip(data.values,data.times)]
+    window_weights       = [  exp(-(t-data.times(-1))**2/tau**2/2) for   t in zip(            data.times)]
+    
+    total_weighting = window_weights.sum
+    
+    weighted_average     = [w / total_weighting for w in zip( windowed_data_values )]
+    
+    # calculate second moment?
+    
     if self.type is 'zero_order'
-    elseif self.type is 'first_order'
+      return weighted_average
+    elseif self.type is 'first_order' # (linear here... exponential after inverse-log transform)
     elseif self.type is 'second_order'
     else
       # throw error
