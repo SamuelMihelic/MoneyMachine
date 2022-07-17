@@ -9,6 +9,8 @@
 import MoneyMachine_library as mm
 import time
 
+exchange1 = mm.exchange( 'kucoin', 'BTC', 'USD' )
+
 baseline_proportion = 0.5
 
 constants = ( 1, 1, 1 ) # PID response constants (to be learned from historical testing)
