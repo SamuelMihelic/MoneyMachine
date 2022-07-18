@@ -15,8 +15,8 @@ exchange1 = mm.exchange( 'kucoin', account_credentials, 'BTC', 'USD' )
 
 baseline_proportion = 0.5 # portion of total benchmark invested
 
-constants = ( -1, -1, -1 ) # PID response constants (to be learned from historical testing)
-PID1 = mm.PID( constants ) # try multiple PIDs and average their outputs
+PID_constants = ( -1, -1, -1 ) # PID response constants (to be learned from historical testing)
+PID1 = mm.PID( PID_constants ) # try multiple PIDs and average their outputs
 
 error1 = mm.error() # the error history will depend on the time elapsed during the control loop
 
@@ -42,6 +42,10 @@ time0 = time.process_time()
 while True # infinite loop
 
 #### Import Data:
+            # measure the time that has elapsed since last error measurement
+            time1 = time.process_time()
+            elapsed_time = time1-time0
+            time0 = time1
 
             # operative quantity is market cap (MCap). not price, this is a more reliable quantity (more information)
             exchange1.update
@@ -49,11 +53,6 @@ while True # infinite loop
             # MCap of the Asset (e.g. BTC) against the benchmark (e.g. USD)
             # log transform the measurements (fold-change viewpoint)
             log_market_cap = exchange1.log_market_cap
-
-            # measure the time that has elapsed since last error measurement
-            time1 = time.process_time()
-            elapsed_time = time1-time0
-            time0 = time1
 
             data1.update( log_market_cap, time0 )
 
