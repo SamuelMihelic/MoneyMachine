@@ -21,8 +21,8 @@ class exchange: # !!! this class unfinished SAM 7/17/22
       self.asset_by_benchmark = self.asset_by_benchmark + type * quantity # type +1 means buy, type -1 means sell (amount is in units of asset)
       return asset_by_benchmark > 0 & asset_by_benchmark < 1 # true if did not run out of asset or benchmark funds
     
-    def log_market_cap_history( data_duration, resolution, end_time )
-      
+    def update_history( data_duration, log_market_cap_history )
+      self.log_market_cap_history = log_market_cap_history
       
       
       # log transform the values
@@ -30,20 +30,9 @@ class exchange: # !!! this class unfinished SAM 7/17/22
       
       return values, times
 
-  if name is 'kucoin':
-    # https://algotrading101.com/learn/kucoin-api-guide/
-    self.url   = 'www....'
-    def update( self ):
-      # Market cap of the target as measured against the benchmark
-      # pull the current value from the exchange using API
-      self.log_market_cap = kucoinAPI()
-    def trade( self, type, amount )
-      return is_trade_successfull
-
+  if name is 'kucoin': # https://algotrading101.com/learn/kucoin-api-guide/
   if name is 'coinbase':
-    
-  if name is 'coinmetro':
-    # https://documenter.getpostman.com/view/3653795/SVfWN6KS#intro
+  if name is 'coinmetro': # https://documenter.getpostman.com/view/3653795/SVfWN6KS#intro
     import requests as rq
     # import urllib
     # urllib.parse.urlencode(dictionary, doseq=True)
@@ -72,6 +61,7 @@ class exchange: # !!! this class unfinished SAM 7/17/22
       
     def log_market_cap_history( data_duration, resolution, end_time )
       # all times in miliseconds
+      # valid resolution values: [ 30000, 60000, ... ]
       start_time = end_time - data_duration
       
       response = rq.get('https://api.coinmetro.com/exchange/candles/BTCUSD/'+str(resolution)+'/'+str(start_time)'/'+str(end_time)
