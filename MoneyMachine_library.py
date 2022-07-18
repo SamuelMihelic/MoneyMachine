@@ -1,3 +1,5 @@
+import time
+
 class exchange: # !!! this class unfinished SAM 7/17/22
   def __init__( self, exchange_name, account_credentials, target_asset, benchmark_asset ):
     
@@ -58,6 +60,9 @@ class exchange: # !!! this class unfinished SAM 7/17/22
       market_cap = response.BTC.USD * number_of_tokens # how to find number of tokens?
       
       self.log_market_cap = log( market_cap )
+      self.time1          = time.process_time()
+      self.elapsed_time = self.time1 - self.time0
+      self.time0        = self.time1
       
     def log_market_cap_history( data_duration, resolution, end_time )
       # all times in miliseconds
