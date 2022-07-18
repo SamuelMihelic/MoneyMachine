@@ -4,29 +4,9 @@
             # According to [the efficient market hypothesis](https://en.wikipedia.org/wiki/Efficient-market_hypothesis) (as well as results from probability theory on [submartingales](https://en.m.wikipedia.org/wiki/Martingale_(probability_theory))), this algorithm will not outperform a simple holding strategy... But we will put this to the test, and at the very least, this algorithm will provide price stability (denoising, not trend-shifting) if enough people adopt it, through the use of [PID control](https://en.wikipedia.org/wiki/PID_controller).
             # SAM 2/19/22
 
-import MoneyMachine_library as mm
-import time
+import MoneyMachine as MM
             
-MoneyMachine1 = MoneyMachine( 'coinmetro', ('username','Password'), 'BTC', 'USD', 0.5, ( -1, -1, -1 ), 60000 * 60 * 24 * 7, 0 )
-
-### BEGIN Section: Control Loop
-while True # infinite loop
-
-            MoneyMachine1.control_loop()
-
-#### Feedback to account manager
-            # alert user that the algo wants to buy more of the asset and running out of money, or it is losing interest in the asset
-            if ~is_trade_successful
-                        # consider shorting the position if we run out of the asset
-                        is_email_successful = Email_Service_API( manager_address, message )
-
-
-#### Chill for a second:
-            chill_duration = 60000 # a minute
-
-            pause( chill_duration )
-
-### END Section: Control Loop
+MM1 = MM.MoneyMachine( 'coinmetro', ('username','Password'), 'BTC', 'USD', 0.5, ( -1, -1, -1 ), 60000 * 60 * 24 * 7, 0 )
 
 class MoneyMachine:
             def __init__( self, exchange, account_credentials, asset, bsset, baseline_proportion, PID_constants, Gaussian_window_length, model_order )
@@ -58,7 +38,9 @@ class MoneyMachine:
                         
                         self.base = baseline_proportion
 
-            def control_loop( self )
+            
+            ### BEGIN Section: Control Loop
+            while True # infinite loop
 
             #### Import Data:
 
@@ -102,3 +84,18 @@ class MoneyMachine:
 
                         # check acct value as measured against the Benchmark_Asset (e.g. dollars)
                         asset_by_benchmark = self.exch.asset_by_benchmark
+                        
+            #### Feedback to account manager !!!! move to inside self.exch
+                        # alert user that the algo wants to buy more of the asset and running out of money, or it is losing interest in the asset
+                        if ~is_trade_successful
+                                    break
+                                    # consider shorting the position if we run out of the asset
+                                    is_email_successful = Email_Service_API( manager_address, message )
+
+
+            #### Chill for a second: !!!! move to inside self.exch
+                        chill_duration = 60000 # a minute
+
+                        pause( chill_duration )
+
+            ### END Section: Control Loop
