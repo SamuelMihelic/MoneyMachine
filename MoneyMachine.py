@@ -4,10 +4,6 @@
             # According to [the efficient market hypothesis](https://en.wikipedia.org/wiki/Efficient-market_hypothesis) (as well as results from probability theory on [submartingales](https://en.m.wikipedia.org/wiki/Martingale_(probability_theory))), this algorithm will not outperform a simple holding strategy... But we will put this to the test, and at the very least, this algorithm will provide price stability (denoising, not trend-shifting) if enough people adopt it, through the use of [PID control](https://en.wikipedia.org/wiki/PID_controller).
             # SAM 2/19/22
 
-import MoneyMachine as MM
-            
-MM1 = MM.MoneyMachine( 'coinmetro', ('username','Password'), 'BTC', 'USD', 0.5, ( -1, -1, -1 ), 60000 * 60 * 24 * 7, 0 )
-
 class MoneyMachine:
             def __init__( self, exchange, account_credentials, asset, bsset, baseline_proportion, PID_constants, Gaussian_window_length, model_order )
                         
