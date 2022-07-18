@@ -12,11 +12,6 @@ MoneyMachine1 = MoneyMachine( 'coinmetro', ('username','Password'), 'BTC', 'USD'
 ### BEGIN Section: Control Loop
 while True # infinite loop
 
-            # measure the time that has elapsed since last error measurement
-            time1 = time.process_time()
-            elapsed_time = time1-time0
-            time0 = time1
-
             MoneyMachine1.control_loop()
 
 #### Feedback to account manager
