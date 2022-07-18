@@ -42,6 +42,40 @@ class exchange: # !!! this class unfinished SAM 7/17/22
 
   if name is 'coinbase':
     
+  if name is 'coinmetro':
+    # https://documenter.getpostman.com/view/3653795/SVfWN6KS#intro
+    import requests as rq
+    # import urllib
+    # urllib.parse.urlencode(dictionary, doseq=True)
+
+    is_demo = True
+    # authenticate
+    if is_demo:
+      authentication = rq.get('https://api.coinmetro.com/open/demo/temp')
+    else:
+      url = 'https://api.coinmetro.com/jwtDevice'
+      h = { 'Content-Type': 'application/x-www-form-urlencoded', \
+            'X-OTP': '', \
+            'X-Device-Id': '963844ug98wfjqd9e8v39kq' }
+      
+      data = { 'login': 'some@mail.com' \
+               'password': '1passWord' }
+      
+      authentication = rq.post( url, data=data, headers=headers )#.json()
+      
+    def update( self ):
+      response = rq.get('https://api.coinmetro.com/exchange/prices').json()
+      
+      market_cap = response.BTC.USD * number_of_tokens # how to find number of tokens?
+      
+      self.log_market_cap = log( market_cap )
+      
+    def log_market_cap_history( data_duration, resolution, end_time )
+      # all times in miliseconds
+      start_time = end_time - data_duration
+      
+      response = rq.get('https://api.coinmetro.com/exchange/candles/BTCUSD/'+str(resolution)+'/'+str(start_time)'/'+str(end_time)
+    
 class data:
   def __init__( self, values, times ):
     self.values = values
