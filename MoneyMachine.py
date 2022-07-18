@@ -90,9 +90,9 @@ class exe:
                                     is_email_successful = Email_Service_API( manager_address, message )
 
 
-            #### Chill for a second: !!!! move to inside self.exch
-                        chill_duration = 60000 # a minute
+                        #### Chill for a second: !!!! move to inside self.exch
+                                    chill_duration = 60000 # a minute
 
-                        pause( chill_duration )
+                                    pause( chill_duration )
 
-            ### END Section: Control Loop
+                        ### END Section: Control Loop
