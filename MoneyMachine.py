@@ -36,56 +36,56 @@ class exe:
                         self.base = baseline_proportion
 
             
-            ### BEGIN Section: Control Loop
-            while True # infinite loop
+                        ### BEGIN Section: Control Loop
+                        while True # infinite loop
 
-            #### Import Data:
+                        #### Import Data:
 
-                        # operative quantity is market cap (MCap). not price, this is a more reliable quantity (more information)
-                        self.exch.update
+                                    # operative quantity is market cap (MCap). not price, this is a more reliable quantity (more information)
+                                    self.exch.update
 
-                        # MCap of the Asset (e.g. BTC) against the benchmark (e.g. USD)
-                        # log transform the measurements (fold-change viewpoint)
-                        log_market_cap = self.exch.log_market_cap
+                                    # MCap of the Asset (e.g. BTC) against the benchmark (e.g. USD)
+                                    # log transform the measurements (fold-change viewpoint)
+                                    log_market_cap = self.exch.log_market_cap
 
-                        self.data.update( log_market_cap, self.exch.time0 )
+                                    self.data.update( log_market_cap, self.exch.time0 )
 
-            #### Data_processing:
+                        #### Data_processing:
 
-                        # Model price estimate (parameter fitting for the price model)
-                        # ...for the recent price history in a (Half-Gaussian) weighted window centered at current_date
-                        # zer0 order value (average)
-                        #  1st order model (exponential)
-                        #  2nd order model (exponential*sinusoidal)
-                        # [ model_market_cap, (parameter_1, parameter_2)] = model1.fitting( data ) 
-                        log_model_market_cap = self.model.fitting( self.data ) 
+                                    # Model price estimate (parameter fitting for the price model)
+                                    # ...for the recent price history in a (Half-Gaussian) weighted window centered at current_date
+                                    # zer0 order value (average)
+                                    #  1st order model (exponential)
+                                    #  2nd order model (exponential*sinusoidal)
+                                    # [ model_market_cap, (parameter_1, parameter_2)] = model1.fitting( data ) 
+                                    log_model_market_cap = self.model.fitting( self.data ) 
 
-            #### PID responder:
+                        #### PID responder:
 
-                        # difference between model and measurement (fold-difference because of log-transform)
-                        self.err.update( log_market_cap - log_model_market_cap, self.elapsed_time )
+                                    # difference between model and measurement (fold-difference because of log-transform)
+                                    self.err.update( log_market_cap - log_model_market_cap, self.elapsed_time )
 
-                        # PID response (inner product of errors and parameters)
-                        self.PID.update( self.err )
+                                    # PID response (inner product of errors and parameters)
+                                    self.PID.update( self.err )
 
-                        # transform back to ratio land (from difference land), scaling the response to the account size, converting to benchmark units
-                        response_asset_by_benchmark = exp( self.PID.response ) * self.base * self.exch.asset_by_benchmark
+                                    # transform back to ratio land (from difference land), scaling the response to the account size, converting to benchmark units
+                                    response_asset_by_benchmark = exp( self.PID.response ) * self.base * self.exch.asset_by_benchmark
 
-                        # difference between current and response portfolio
-                        trade_type     = sign( response_asset_by_benchmark - self.exch.asset_by_benchmark ) # +1 means buy, -1 means sell
-                        trade_quantity =  abs( response_asset_by_benchmark - self.exch.asset_by_benchmark )
+                                    # difference between current and response portfolio
+                                    trade_type     = sign( response_asset_by_benchmark - self.exch.asset_by_benchmark ) # +1 means buy, -1 means sell
+                                    trade_quantity =  abs( response_asset_by_benchmark - self.exch.asset_by_benchmark )
 
-            #### Trading (control)
-                        # Buying/Selling some amount of the target Asset (e.g. BTC) with the Benchmark asset (e.g. dollars)
-                        is_trade_successful = self.exch.trade( trade_type, trade_quantity )
+                        #### Trading (control)
+                                    # Buying/Selling some amount of the target Asset (e.g. BTC) with the Benchmark asset (e.g. dollars)
+                                    is_trade_successful = self.exch.trade( trade_type, trade_quantity )
 
-                        # check acct value as measured against the Benchmark_Asset (e.g. dollars)
-                        asset_by_benchmark = self.exch.asset_by_benchmark
-                        
-            #### Feedback to account manager !!!! move to inside self.exch
-                        # alert user that the algo wants to buy more of the asset and running out of money, or it is losing interest in the asset
-                        if ~is_trade_successful
-                                    break
+                                    # check acct value as measured against the Benchmark_Asset (e.g. dollars)
+                                    asset_by_benchmark = self.exch.asset_by_benchmark
+
+                        #### Feedback to account manager !!!! move to inside self.exch
+                                    # alert user that the algo wants to buy more of the asset and running out of money, or it is losing interest in the asset
+                                    if ~is_trade_successful
+                                                break
                                     # consider shorting the position if we run out of the asset
                                     is_email_successful = Email_Service_API( manager_address, message )
 
