@@ -22,3 +22,4 @@ if args.cm:
 
         if args.save:
             coinmetro_exchange.write_out_historic_data(historic_data=historic_data, filepath=f"./historic_data/BTCUSD.csv")
+            print("data written successfuly to ./historic_data/BTCUSD.csv")
