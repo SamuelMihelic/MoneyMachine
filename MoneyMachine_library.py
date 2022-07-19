@@ -1,4 +1,7 @@
 import time
+import requests as rq
+# import urllib
+# urllib.parse.urlencode(dictionary, doseq=True)
 
 class exchange: # !!! this class unfinished SAM 7/17/22
   def __init__( self, exchange_name, account_credentials, target_asset, benchmark_asset ):
@@ -7,54 +10,48 @@ class exchange: # !!! this class unfinished SAM 7/17/22
     
     self.asset =    target_asset
     self.bsset = benchmark_asset
+
+    # self.historical = rq.get('https://api.coinmetro.com/exchange/candles/BTCUSD/'+str(resolution)+'/'+str(start_time)'/'+str(end_time)
+    self.historical = rq.get('https://api.coinmetro.com/exchange/candles/'+self.asset+self.bsset+'/86400000').json
+
+    # if self.name is 'local': # read historical data
+      # # self.historical = rq.get('https://api.coinmetro.com/exchange/candles/BTCUSD/86400000').json
+      # self.historical = rq.get('https://api.coinmetro.com/exchange/candles/'+self.asset+self.bsset+'/86400000').json
+    if self.name is 'coinmetro': # https://documenter.getpostman.com/view/3653795/SVfWN6KS#intro
+      is_demo = True
+      # authenticate
+      if is_demo:
+        authentication = rq.get('https://api.coinmetro.com/open/demo/temp')
+      else:
+        # def log_market_cap_history( data_duration, resolution, end_time )
+        # all times in miliseconds
+        # valid resolution values: [ 60000, 300000, ... ]
+        start_time = end_time - data_duration
+        
+        url = 'https://api.coinmetro.com/jwtDevice'
+        h = { 'Content-Type': 'application/x-www-form-urlencoded', \
+              'X-OTP': '', \
+              'X-Device-Id': '963844ug98wfjqd9e8v39kq' }
+        
+        data = { 'login'   : account_credentials[0], \
+                 'password': account_credentials[1]  }
+        
+        authentication = rq.post( url, data=data, headers=headers )#.json()
+      self.auth = authentication
+
   
-  if name is 'local': # for historical training purposes
-    # read from local_file (= 'market_cap_history.txt')
-    def data_extraction( self, local_file, data_duration, resolution, end_time ):
-      # expand this function here
 
-      self.value_history = values
-      self._time_history =  times
+  # def data_extraction( self, local_file, data_duration, resolution, end_time ):
+  #   # expand this function here
+  # 
+  #   self.value_history = values
+  #   self._time_history =  times
 
-    def update( self, log_market_cap ):
+  def update( self ):
+    if self.name is 'local': # for historical training purposes
       self.log_market_cap = log_market_cap # pull next datapoint from training data
-    
-    def trade( self, type, quantity )
-      self.asset_by_benchmark = self.asset_by_benchmark + type * quantity # type +1 means buy, type -1 means sell (amount is in units of asset)
-      return asset_by_benchmark > 0 & asset_by_benchmark < 1 # true if did not run out of asset or benchmark funds
-    
-    def update_history( data_duration, log_market_cap_history )
-      self.log_market_cap_history = log_market_cap_history
-      
-      
-      # log transform the values
-      values = [ log(v) for v in zip( values )]
-      
-      return values, times
 
-  if name is 'kucoin': # https://algotrading101.com/learn/kucoin-api-guide/
-  if name is 'coinbase':
-  if name is 'coinmetro': # https://documenter.getpostman.com/view/3653795/SVfWN6KS#intro
-    import requests as rq
-    # import urllib
-    # urllib.parse.urlencode(dictionary, doseq=True)
-
-    is_demo = True
-    # authenticate
-    if is_demo:
-      authentication = rq.get('https://api.coinmetro.com/open/demo/temp')
-    else:
-      url = 'https://api.coinmetro.com/jwtDevice'
-      h = { 'Content-Type': 'application/x-www-form-urlencoded', \
-            'X-OTP': '', \
-            'X-Device-Id': '963844ug98wfjqd9e8v39kq' }
-      
-      data = { 'login': 'some@mail.com' \
-               'password': '1passWord' }
-      
-      authentication = rq.post( url, data=data, headers=headers )#.json()
-      
-    def update( self ):
+    if self.name is 'coinmetro':
       response = rq.get('https://api.coinmetro.com/exchange/prices').json()
       
       market_cap = response.BTC.USD * number_of_tokens # how to find number of tokens?
@@ -63,14 +60,33 @@ class exchange: # !!! this class unfinished SAM 7/17/22
       self.time1          = time.process_time()
       self.elapsed_time = self.time1 - self.time0
       self.time0        = self.time1
-      
-    def log_market_cap_history( data_duration, resolution, end_time )
-      # all times in miliseconds
-      # valid resolution values: [ 30000, 60000, ... ]
-      start_time = end_time - data_duration
-      
-      response = rq.get('https://api.coinmetro.com/exchange/candles/BTCUSD/'+str(resolution)+'/'+str(start_time)'/'+str(end_time)
+  
+  def trade( self, type, quantity ):
+    if self.name is 'local':
+      self.asset_by_benchmark = self.asset_by_benchmark + type * quantity # type +1 means buy, type -1 means sell (amount is in units of asset)
+      is_not_saturated = self.asset_by_benchmark >= 0 \
+                       & self.asset_by_benchmark <= 1 # true if did not run out of asset or benchmark funds
+      if self.asset_by_benchmark < 0:
+        self.asset_by_benchmark = 0
+      if self.asset_by_benchmark > 1:
+        self.asset_by_benchmark = 1
+      return is_not_saturated
+    # if self.name is 'coinmetro':
+      # api for trading
+
+  
+  # def update_history( data_duration, log_market_cap_history )
+    # self.log_market_cap_history = log_market_cap_history
     
+    
+    # # log transform the values
+    # values = [ log(v) for v in zip( values )]
+    
+    # return values, times
+
+# if name is 'kucoin': # https://algotrading101.com/learn/kucoin-api-guide/
+# if name is 'coinbase':
+
 class data:
   def __init__( self, values, times ):
     self.values = values
