@@ -25,7 +25,7 @@ class exe:
                         # resolution = 1e-3
                         self.res = Gaussian_window_length / 10
 
-                        values, times = exchange1.log_market_cap_history( data_duration, resolution )
+                        values, times = self.exch.log_market_cap_history( data_duration, self.res )
 
                         self.data = mm.data( values, times ) # e.g. values in $$, times in minutes
 
