@@ -66,3 +66,20 @@ This overview outlines the [**active account management cycle**](#Control-Loop),
       consider the tax burden (long0-term vs short-term, over or under a year)
 
 - [execution ("here goes nothing")](MoneyMachine.py):</li>
+
+# Startup
+
+### Prereqs
+
+- Python >= 3.9
+- Make
+
+### Installing dependencies
+
+- `$ make venv`
+- `$ source ./venv/bin/activate`
+- `$ pip install -r requirements.txt`
+
+### Usage
+
+- `$ make test`
