@@ -4,13 +4,15 @@ import requests as rq
 # urllib.parse.urlencode(dictionary, doseq=True)
 
 class exchange: # !!! this class unfinished SAM 7/17/22
-  def __init__( self, exchange_name, account_credentials, target_asset, benchmark_asset ):
+  def __init__( self, exchange_name, account_credentials, target_asset, benchmark_asset, history_duration ):
     
     self.name  =   exchange_name
     
     self.asset =    target_asset
     self.bsset = benchmark_asset
 
+    # read from history_duration to present time
+    
     # self.historical = rq.get('https://api.coinmetro.com/exchange/candles/BTCUSD/'+str(resolution)+'/'+str(start_time)'/'+str(end_time)
     self.historical = rq.get('https://api.coinmetro.com/exchange/candles/'+self.asset+self.bsset+'/86400000').json
 
@@ -23,7 +25,7 @@ class exchange: # !!! this class unfinished SAM 7/17/22
       if is_demo:
         authentication = rq.get('https://api.coinmetro.com/open/demo/temp')
       else:
-        # def log_market_cap_history( data_duration, resolution, end_time )
+        # def log_price_history( data_duration, resolution, end_time )
         # all times in miliseconds
         # valid resolution values: [ 60000, 300000, ... ]
         start_time = end_time - data_duration
@@ -49,14 +51,15 @@ class exchange: # !!! this class unfinished SAM 7/17/22
 
   def update( self ):
     if self.name is 'local': # for historical training purposes
-      self.log_market_cap = log_market_cap # pull next datapoint from training data
+      self.log_price = csv_read(historic_data.csv,self.time_idx) # pull the time_idx'th datapoint from training data
+      self.time_idx = self.time_idx+1
 
     if self.name is 'coinmetro':
       response = rq.get('https://api.coinmetro.com/exchange/prices').json()
       
-      market_cap = response.BTC.USD * number_of_tokens # how to find number of tokens?
+      price = response.BTC.USD * number_of_tokens # how to find number of tokens?
       
-      self.log_market_cap = log( market_cap )
+      self.log_price = log( price )
       self.time1          = time.process_time()
       self.elapsed_time = self.time1 - self.time0
       self.time0        = self.time1
@@ -75,8 +78,8 @@ class exchange: # !!! this class unfinished SAM 7/17/22
       # api for trading
 
   
-  # def update_history( data_duration, log_market_cap_history )
-    # self.log_market_cap_history = log_market_cap_history
+  # def update_history( data_duration, log_price_history )
+    # self.log_price_history = log_price_history
     
     
     # # log transform the values
