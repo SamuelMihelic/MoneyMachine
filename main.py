@@ -1,16 +1,24 @@
 import argparse
 from exchange import CoinmetroExchange
+from pprint import pprint
  
 parser = argparse.ArgumentParser(description = "Money Machine")
  
 parser.add_argument("--cm", "--coinmetro", action="store_true")
+parser.add_argument("--er", "--exchangerate", action="store_true")
+parser.add_argument("--hd", "--historicdata", action="store_true")
+parser.add_argument("--save", "--savedata", action="store_true")
  
 args = parser.parse_args()
 
 if args.cm:
     coinmetro_exchange = CoinmetroExchange.CoinmetroExchange()
-    print("Current price of BTC:")
-    print(coinmetro_exchange.get_exchange_rate(currency="BTC", base_currency="USD"))
-    
-    print("Every 10000th data point from historical price data of BTC/USD with data granulatrity of every 30 minutes")
-    coinmetro_exchange.get_historic_price_data(currency="BTC", base_currency="USD", start_time="", end_time="")
+    if args.er:
+        ex_rate = coinmetro_exchange.get_exchange_rate(currency="BTC", base_currency="USD")
+        print(f"Current price of BTC: {ex_rate}")
+
+    if args.hd:
+        historic_data = coinmetro_exchange.get_historic_price_data(currency="BTC", base_currency="USD")
+
+        if args.save:
+            coinmetro_exchange.write_out_historic_data(historic_data=historic_data, filepath=f"./historic_data/BTCUSD.csv")

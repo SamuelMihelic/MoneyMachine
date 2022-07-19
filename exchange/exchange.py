@@ -1,4 +1,9 @@
 from abc import ABC, abstractmethod
+from requests import get
+
+def get_json_response(query_url: str):
+    res_raw = get(url=query_url)
+    return res_raw.json()
 
 class Exchange(ABC):
     name: str
@@ -9,10 +14,41 @@ class Exchange(ABC):
     
     @abstractmethod
     def get_exchange_rate(self, currency: str, base_currency: str) -> dict:
+        """
+        get_exchange_rate returns the current exchange rate
+        of the currency versus the base currency.  
+        
+        E.g. currency = BTC, base_currency = USD, this method returns how many USD
+            a single BTC is worth.
+
+        Parameters:
+            currency (str): Currency to compare
+            base_currency (str): Currency to compare against
+        
+        Returns:
+            dict containing the exchange rate information
+        """
         pass
 
     @abstractmethod
-    def get_historic_price_data(self, currency: str, base_currency: str, start_time: str, end_time: str) -> list:
+    def get_historic_price_data(self, currency: str, base_currency: str, resolution: int, start_time: int, end_time: int) -> list:
+        """
+        get_historic_price_data returns a list of data representing the historic
+        price data of currency exchange.  
+        
+        E.g. currency = BTC, base_currency = USD, this method returns how many USD
+            a single BTC is worth.
+
+        Parameters:
+            currency (str): Currency to compare
+            base_currency (str): Currency to compare against
+            resolution (int): How frequently to take measurements (ms)
+            start_time (int): The Unix timestamp of when to start looking (ms)
+            end_time (int): The Unix timestamp of when to stop looking (ms)
+        
+        Returns:
+            list of data points
+        """
         pass
 
     # TODO - UNIMPLEMENTED
@@ -25,10 +61,6 @@ class Exchange(ABC):
 
 
 # class Local(Exchange):
-#     pass
-
-
-# class Coinmetro(Exchange):
 #     pass
 
 

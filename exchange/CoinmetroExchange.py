@@ -1,8 +1,8 @@
-from curses import start_color
 from requests import get
-from exchange.exchange import Exchange
+from exchange.exchange import Exchange, get_json_response
 from pprint import pprint
 from datetime import datetime
+import csv
 
 class CoinmetroExchange(Exchange):
     
@@ -14,27 +14,44 @@ class CoinmetroExchange(Exchange):
     def get_exchange_rate(self, currency: str, base_currency: str) -> dict:
         currency_pair = f"{currency}{base_currency}"
         query_url = f"{self.api_base_url}/exchange/prices"
-        market_data_res = get(url=query_url)
-        market_data_raw = market_data_res.json()
-        latest_prices = market_data_raw.get('latestPrices', [])
+        
+        market_data = get_json_response(query_url=query_url)
+        latest_prices = market_data.get('latestPrices', [])
         for info in latest_prices:
             if info.get("pair", "") == currency_pair:
+                unix_timestamp = int(info.get("timestamp", 0)) / 1000
+                time_string = datetime.utcfromtimestamp(unix_timestamp).strftime('%Y-%m-%d %H:%M:%S')
+                price = info.get("price", 0),
                 return {
-                    "price": info.get("price", 0),
-                    "time": datetime.utcfromtimestamp(int(info.get("timestamp", 0)) / 1000 ).strftime('%Y-%m-%d %H:%M:%S')
+                    "price": price,
+                    "time": time_string
                 }
+
         return {}
+    
+    def _get_historic_price_data(self, query_url: str):
+        historic_data = get_json_response(query_url=query_url)
+        return historic_data.get('candleHistory', [])
 
-    def get_historic_price_data(self, currency: str, base_currency: str, start_time: str, end_time: str) -> list:
-        # beginning_timestamp = datetime.strptime(start_time, '%d/%m/%Y')
-        # end_timestamp = datetime.strptime(end_time, '%d/%m/%Y')
-        
-        query_url = f"{self.api_base_url}/exchange/candles/{currency}{base_currency}/1800000" #/{int(datetime.timestamp(beginning_timestamp)*1000)}/{int(datetime.timestamp(end_timestamp)*1000)}"
-        market_data_res = get(url=query_url)
-        market_data_raw = market_data_res.json()
-        
-        historical_data_points = market_data_raw.get('candleHistory'), []
 
-        for dp in historical_data_points[::10000]:
-            pprint(dp)
-        
+    def get_historic_price_data(self, currency: str, base_currency: str, resolution: int = 1800000, start_time: int = 0, end_time: int = 0) -> list:
+        if start_time == 0 or end_time == 0:
+            query_url = f"{self.api_base_url}/exchange/candles/{currency}{base_currency}/{resolution}"
+        else:
+            query_url = f"{self.api_base_url}/exchange/candles/{currency}{base_currency}/{resolution}/{start_time}/{end_time}"
+
+        return self._get_historic_price_data(query_url=query_url)
+
+    def write_out_historic_data(self, historic_data: list, filepath: str):
+        with open(filepath, mode="w+") as f:
+            field_names = ["timestamp", "open", "close", "high", "low"]
+            csv_writer = csv.DictWriter(f, delimiter=",", fieldnames=field_names)
+            csv_writer.writeheader()
+            for r in historic_data:
+                csv_writer.writerow({
+                    "timestamp": r.get("timestamp", ""),
+                    "open": r.get("o", 0),
+                    "close": r.get("c", 0),
+                    "high": r.get("h", 0),
+                    "low": r.get("l", 0),
+                })
