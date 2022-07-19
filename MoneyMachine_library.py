@@ -3,24 +3,25 @@ import requests as rq
 # import urllib
 # urllib.parse.urlencode(dictionary, doseq=True)
 
-class exchange: # !!! this class unfinished SAM 7/17/22
-  def __init__( self, exchange_name, account_credentials, target_asset, benchmark_asset, history_duration ):
+class exchange: 
+  def __init__( self, exchange_name, account_credentials, target_asset, benchmark_asset, historical_data_file, history_duration, resolution ):
     
-    self.name  =   exchange_name
+    self.name       =   exchange_name # coinmetro, local
+    self.asset      =    target_asset # BTC
+    self.bsset      = benchmark_asset # USD
+    self.resolution =      resolution # time interval in ms
+    self.duration   =        duration 
     
-    self.asset =    target_asset
-    self.bsset = benchmark_asset
+    if self.name is 'local':
+      self.time_idx = 0
+      csv.open( self.historical_data_file, -r )
+    else:
+      csv.open( self.historical_data_file, -w )
 
-    # read from history_duration to present time
-    
-    # self.historical = rq.get('https://api.coinmetro.com/exchange/candles/BTCUSD/'+str(resolution)+'/'+str(start_time)'/'+str(end_time)
-    self.historical = rq.get('https://api.coinmetro.com/exchange/candles/'+self.asset+self.bsset+'/86400000').json
-
-    # if self.name is 'local': # read historical data
-      # # self.historical = rq.get('https://api.coinmetro.com/exchange/candles/BTCUSD/86400000').json
-      # self.historical = rq.get('https://api.coinmetro.com/exchange/candles/'+self.asset+self.bsset+'/86400000').json
+  def authenticate( self )
+    # if self.name is 'local': no authentication
     if self.name is 'coinmetro': # https://documenter.getpostman.com/view/3653795/SVfWN6KS#intro
-      is_demo = True
+      is_demo = True # demo server from coinmetro to practice trades
       # authenticate
       if is_demo:
         authentication = rq.get('https://api.coinmetro.com/open/demo/temp')
@@ -48,22 +49,23 @@ class exchange: # !!! this class unfinished SAM 7/17/22
   # 
   #   self.value_history = values
   #   self._time_history =  times
-
-  def update( self ):
-    if self.name is 'local': # for historical training purposes
-      self.log_price = csv_read(historic_data.csv,self.time_idx) # pull the time_idx'th datapoint from training data
-      self.time_idx = self.time_idx+1
-
-    if self.name is 'coinmetro':
-      response = rq.get('https://api.coinmetro.com/exchange/prices').json()
-      
-      price = response.BTC.USD * number_of_tokens # how to find number of tokens?
-      
-      self.log_price = log( price )
-      self.time1          = time.process_time()
-      self.elapsed_time = self.time1 - self.time0
-      self.time0        = self.time1
   
+  def update( self ):
+    if self.name is 'local': # pull from historical data file.csv
+      # self.data_path = historic_data.csv
+      self.price, self.time1 = csv_read(self.data_path,self.time_idx ) # pull the time_idx'th datapoint from price data
+      self.time_idx    += 1
+        
+    if self.name is 'coinmetro': # get current exchange rate from exchange
+      response = rq.get('https://api.coinmetro.com/exchange/prices').json()
+      self.price  = response.price.BTC
+      # self.time1  = time.process_time()
+      self.time1  = response.time
+    self.elapsed_time = self.time1 - self.time0
+    self.time0        = self.time1
+    
+    csv.write
+
   def trade( self, type, quantity ):
     if self.name is 'local':
       self.asset_by_benchmark = self.asset_by_benchmark + type * quantity # type +1 means buy, type -1 means sell (amount is in units of asset)
@@ -78,8 +80,12 @@ class exchange: # !!! this class unfinished SAM 7/17/22
       # api for trading
 
   
-  # def update_history( data_duration, log_price_history )
-    # self.log_price_history = log_price_history
+  def update_history( data_duration, price_history )
+    self.price_history = price_history
+    # read from history_duration to present time
+    
+    # self.historical = rq.get('https://api.coinmetro.com/exchange/candles/BTCUSD/'+str(resolution)+'/'+str(start_time)'/'+str(end_time)
+    self.historical = rq.get('https://api.coinmetro.com/exchange/candles/'+self.asset+self.bsset+'/86400000').json    
     
     
     # # log transform the values
