@@ -33,8 +33,9 @@ class CoinmetroExchange(Exchange):
         historic_data = get_json_response(query_url=query_url)
         return historic_data.get('candleHistory', [])
 
-    # valid resolutions (ms): 60,000; 300,000; 1,800,000; 14,400,000; 86,400,000;
-    # valid resolutions     :    min;   5 min; half-hour;    4 hours;        day;
+    # valid resolutions (ms): 60,000; 300,000; 1,800,000; 14,400,000; 86,400,000;  *NOT* Valid: 31,536,000,000;
+    #                            min;   5 min; half-hour;    4 hours;        day;                         year;
+    # year 2012 in epoch time (ms since jan 1st, 1970): 1.324512e+12
     def get_historic_price_data(self, currency: str, base_currency: str, resolution: int = 1800000, start_time: int = 0, end_time: int = 0) -> list:
         if start_time == 0 or end_time == 0:
             query_url = f"{self.api_base_url}/exchange/candles/{currency}{base_currency}/{resolution}"
