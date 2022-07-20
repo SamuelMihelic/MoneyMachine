@@ -4,13 +4,14 @@ import requests as rq
 # urllib.parse.urlencode(dictionary, doseq=True)
 
 class exchange: 
-  def __init__( self, exchange_name, account_credentials, target_asset, benchmark_asset, historical_data_file, history_duration, resolution ):
+  def __init__( self, exchange_name, account_credentials, target_asset, benchmark_asset, historical_data_file, history_duration, resolution, is_demo ):
     
     self.name       =   exchange_name # coinmetro, local
     self.asset      =    target_asset # BTC
     self.bsset      = benchmark_asset # USD
-    self.resolution =      resolution # time interval in ms
-    self.duration   =        duration 
+    self.resolution =      resolution # [ms] time interval between samples (8640000)
+    self.duration   =        duration # [ms] time to read into the past for data for the model
+    self.is_demo    =         is_demo # for practicing the api trading with the exchange
     
     if self.name is 'local':
       self.time_idx = 0
@@ -41,31 +42,23 @@ class exchange:
         
         authentication = rq.post( url, data=data, headers=headers )#.json()
       self.auth = authentication
-
   
-
-  # def data_extraction( self, local_file, data_duration, resolution, end_time ):
-  #   # expand this function here
-  # 
-  #   self.value_history = values
-  #   self._time_history =  times
-  
-  def update( self ):
-    if self.name is 'local': # pull from historical data file.csv
-      # self.data_path = historic_data.csv
-      self.price, self.time1 = csv_read(self.data_path,self.time_idx ) # pull the time_idx'th datapoint from price data
-      self.time_idx    += 1
-        
+  def update( self ):        
     if self.name is 'coinmetro': # get current exchange rate from exchange
       response = rq.get('https://api.coinmetro.com/exchange/prices').json()
       self.price  = response.price.BTC
       # self.time1  = time.process_time()
       self.time1  = response.time
+    
+    if self.name is 'local': # pull from historical data file.csv
+      # self.data_path = historic_data.csv
+      self.price, self.time1 = csv.read(self.data_path,self.time_idx ) # pull the time_idx'th datapoint from price data
+      self.time_idx    += 1
+    else:
+      csv.write(self.data_path,self.price,self.time1,--append)
     self.elapsed_time = self.time1 - self.time0
     self.time0        = self.time1
     
-    csv.write
-
   def trade( self, type, quantity ):
     if self.name is 'local':
       self.asset_by_benchmark = self.asset_by_benchmark + type * quantity # type +1 means buy, type -1 means sell (amount is in units of asset)
@@ -80,24 +73,38 @@ class exchange:
       # api for trading
 
   
-  def update_history( data_duration, price_history )
-    self.price_history = price_history
-    # read from history_duration to present time
+  def update_history( self )
+
+    last_prices, last_times = csv.read( self.historical_data_file ) 
+  
+    if self.name is 'coinmetro':
+      start_time = str(int(time.process_time()-self.duration))
+      end_time   = '' # optional parameter: should go to current time?
+      # self.historical = rq.get('https://api.coinmetro.com/exchange/candles/BTCUSD/'+str(resolution)+'/'+str(start_time)'/'+str(end_time)
+      # round self.resolution to closest valid option
+      prices, times = rq.get('https://api.coinmetro.com/exchange/candles/'+self.asset+self.bsset+'/'+self.resolution+'/'+start_time+'/'+end_time).json    
     
-    # self.historical = rq.get('https://api.coinmetro.com/exchange/candles/BTCUSD/'+str(resolution)+'/'+str(start_time)'/'+str(end_time)
-    self.historical = rq.get('https://api.coinmetro.com/exchange/candles/'+self.asset+self.bsset+'/86400000').json    
+    if self.name is 'local':
+      self.time0    = last_times(0) + self.duration # read the first entry and get the timestamp add one window for the model
+      prices, times = last_prices(last_times<self.time0), last_times(last_times<self.time0) # take the data points before time0 as recent history
     
-    
-    # # log transform the values
-    # values = [ log(v) for v in zip( values )]
-    
-    # return values, times
+    else:
+      self.time0 = times[-1] # most recent timestamp from the recent historical data from the exchange
+      
+      # read last time off the record
+      last_price, last_time = last_prices(-1), last_times(-1) 
+      
+      # write any more recent data to the end of the historical csv file
+      csv.write(self.historical_data_file ),prices(times>last_time),\
+                                             times(times>last_time),--append)
+    return prices, times
 
 # if name is 'kucoin': # https://algotrading101.com/learn/kucoin-api-guide/
 # if name is 'coinbase':
 
 class data:
   def __init__( self, values, times ):
+    # read the values from the csv file instead
     self.values = values
     self._times =  times
 
