@@ -4,7 +4,7 @@ import requests as rq
 # urllib.parse.urlencode(dictionary, doseq=True)
 
 class exchange: 
-  def __init__( self, exchange_name, account_credentials, target_asset, benchmark_asset, , history_duration, resolution, is_demo ):
+  def __init__( self, exchange_name, account_credentials, target_asset, benchmark_asset, historical_data_file, history_duration, resolution, is_demo ):
     
     self.name       =   exchange_name # coinmetro, local
     self.asset      =    target_asset # BTC
@@ -23,16 +23,10 @@ class exchange:
   def authenticate( self )
     # if self.name is 'local': no authentication
     if self.name is 'coinmetro': # https://documenter.getpostman.com/view/3653795/SVfWN6KS#intro
-      is_demo = True # demo server from coinmetro to practice trades
       # authenticate
-      if is_demo:
+      if self.is_demo:
         authentication = rq.get('https://api.coinmetro.com/open/demo/temp')
-      else:
-        # def log_price_history( data_duration, resolution, end_time )
-        # all times in miliseconds
-        # valid resolution values: [ 60000, 300000, ... ]
-        start_time = end_time - data_duration
-        
+      else:        
         url = 'https://api.coinmetro.com/jwtDevice'
         h = { 'Content-Type': 'application/x-www-form-urlencoded', \
               'X-OTP': '', \
@@ -75,7 +69,6 @@ class exchange:
 
   
   def update_history( self )
-
     last_prices, last_times = csv.read( self.log_file ) 
   
     if self.name is 'coinmetro':
