@@ -124,11 +124,14 @@ class model:
     
     if     self.order is 0: # 'zero_order'
       return weighted_average
-    elseif self.order is 1: # (linear here... exponential after inverse-log transform)
-    elseif self.order is 2: # add the      most dominant harmonic
-    elseif self.order is 3: # add the next-most dominant harmonic
-    else
-      # throw error
+    elseif self.order is 1:
+      pass# (linear here... exponential after inverse-log transform)
+    elseif self.order is 2: 
+      pass# add the      most dominant harmonic
+    elseif self.order is 3: 
+      pass# add the next-most dominant harmonic
+    else:
+      pass# throw error
   
 class error:
   def __init__( self ):
