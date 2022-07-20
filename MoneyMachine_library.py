@@ -107,9 +107,11 @@ class data:
   def update( self, value, time ):
     historical_data_file, history_duration, resolution, exchange_name, account_credentials, target_asset, benchmark_asset, is_demo
     
+    # one datapoint in, one out !! make sure that they have the same sampling resolution !!!
     self.values(0).pop
     self._times(0).pop
-    
+
+    # ??? is it more efficient to pop the last data point and append to the start ???    
     self.values.append(value)
     self._times.append( time)
   
