@@ -1,5 +1,6 @@
 import time
 import requests as rq
+import csv
 # import urllib
 # urllib.parse.urlencode(dictionary, doseq=True)
 
@@ -11,17 +12,19 @@ class exchange:
     self.bsset      = benchmark_asset # USD
     self.resolution =      resolution # [ms] time interval between samples (8640000)
     self.duration   = history_duration # [ms] time to read into the past for data for the model
-    self.is_demo    =         is_demo # for practicing the api trading with the exchange
     self.log_file   = historical_data_file # for recording spot prices and times
-    self.credentials = account_credentials
     
     if self.name is 'local':
       self.time_idx = 0
-      csv.open( self.log_file, -r )
+      csv_file = open(self.log_file,'r') # open for reading
     else:
-      csv.open( self.log_file, -w )
+      csv_file = open(self.log_file,'w') # open for writing
+      self.credentials = account_credentials
+      self.is_demo     =             is_demo # for practicing the api trading with the exchange
+    self.csv_reader = csv.reader(csv_file, delimiter=',')
+    # for row in csv_reader:
 
-  def authenticate( self )
+  def authenticate( self ):
     # if self.name is 'local': no authentication
     if self.name is 'coinmetro': # https://documenter.getpostman.com/view/3653795/SVfWN6KS#intro
       # authenticate
@@ -29,7 +32,7 @@ class exchange:
         authentication = rq.get('https://api.coinmetro.com/open/demo/temp')
       else:        
         url = 'https://api.coinmetro.com/jwtDevice'
-        h = { 'Content-Type': 'application/x-www-form-urlencoded', \
+        headers = { 'Content-Type': 'application/x-www-form-urlencoded', \
               'X-OTP': '', \
               'X-Device-Id': '963844ug98wfjqd9e8v39kq' }
         
@@ -52,8 +55,9 @@ class exchange:
       self.price, self.time1 = csv.read(self.log_file,self.time_idx ) # pull the time_idx'th datapoint from price data
       
     else:
-      pause(resolution) # pause for time equal to the data resolution
-      csv.write(self.log_file,self.price,self.time1,--append)
+      pause(self.resolution) # pause for time equal to the data resolution
+      self.csv_reader.write(self.log_file,self.price,self.time1)
+      
     self.elapsed_time = self.time1 - self.time0
     self.time0        = self.time1
     
@@ -91,13 +95,12 @@ class exchange:
       last_price, last_time = last_prices(-1), last_times(-1) 
       
       # write any more recent data to the end of the historical csv file
-      csv.write(self.log_file ),prices(times>last_time),\
-                                             times(times>last_time),--append)
+      
+      self.csv_reader.write(self.log_file,prices(times>last_time),\
+                                           times(times>last_time))
     return prices, times
-
 # if name is 'kucoin': # https://algotrading101.com/learn/kucoin-api-guide/
 # if name is 'coinbase':
-
 class data:
   def __init__( self, values, times ):
     # read the values from the csv file instead
@@ -140,7 +143,6 @@ class model:
       pass# add the next-most dominant harmonic
     else:
       pass# throw error
-  
 class error:
   def __init__( self ):
     self.P = 0
