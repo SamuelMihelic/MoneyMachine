@@ -4,7 +4,7 @@ import requests as rq
 # urllib.parse.urlencode(dictionary, doseq=True)
 
 class exchange: 
-  def __init__( self, exchange_name, account_credentials, target_asset, benchmark_asset, historical_data_file, history_duration, resolution, is_demo ):
+  def __init__( self, exchange_name, account_credentials, target_asset, benchmark_asset, , history_duration, resolution, is_demo ):
     
     self.name       =   exchange_name # coinmetro, local
     self.asset      =    target_asset # BTC
@@ -12,12 +12,13 @@ class exchange:
     self.resolution =      resolution # [ms] time interval between samples (8640000)
     self.duration   =        duration # [ms] time to read into the past for data for the model
     self.is_demo    =         is_demo # for practicing the api trading with the exchange
+    self.log_file   = historical_data_file # for recording spot prices and times
     
     if self.name is 'local':
       self.time_idx = 0
-      csv.open( self.historical_data_file, -r )
+      csv.open( self.log_file, -r )
     else:
-      csv.open( self.historical_data_file, -w )
+      csv.open( self.log_file, -w )
 
   def authenticate( self )
     # if self.name is 'local': no authentication
@@ -75,7 +76,7 @@ class exchange:
   
   def update_history( self )
 
-    last_prices, last_times = csv.read( self.historical_data_file ) 
+    last_prices, last_times = csv.read( self.log_file ) 
   
     if self.name is 'coinmetro':
       start_time = str(int(time.process_time()-self.duration))
@@ -95,7 +96,7 @@ class exchange:
       last_price, last_time = last_prices(-1), last_times(-1) 
       
       # write any more recent data to the end of the historical csv file
-      csv.write(self.historical_data_file ),prices(times>last_time),\
+      csv.write(self.log_file ),prices(times>last_time),\
                                              times(times>last_time),--append)
     return prices, times
 
