@@ -6,7 +6,7 @@
 import MoneyMachine_library as mm
             
 class exe:
-            def __init__( self, exchange, account_credentials, asset, bsset, baseline_proportion, PID_constants, Gaussian_window_length, model_order )
+            def __init__( self, exchange, account_credentials, asset, bsset, baseline_proportion, PID_constants, Gaussian_window_length, model_order ):
                         
                         # account_credentials = # data structure
                         self.exch = mm.exchange( exchange, account_credentials, asset, bsset )
@@ -37,7 +37,7 @@ class exe:
 
             
                         ### BEGIN Section: Control Loop
-                        while True # infinite loop
+                        while True: # infinite loop
 
                         #### Import Data:
 
