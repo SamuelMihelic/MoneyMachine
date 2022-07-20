@@ -4,7 +4,7 @@ import requests as rq
 # urllib.parse.urlencode(dictionary, doseq=True)
 
 class exchange: 
-  def __init__( self, historical_data_file, history_duration, resolution, exchange_name, account_credentials, target_asset, benchmark_asset, is_demo ):
+  def __init__( self, historical_data_file, history_duration, resolution, exchange_name, target_asset, benchmark_asset, is_demo, account_credentials ):
     
     self.name       =   exchange_name # coinmetro, local
     self.asset      =    target_asset # BTC
