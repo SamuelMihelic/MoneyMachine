@@ -46,13 +46,13 @@ class exchange:
       self.time1  = response.time
     
     if self.name is 'local': # pull from historical data file.csv
-      # self.data_path = historic_data.csv
+      # self.log_file = historic_data.csv
       self.time_idx    += 1
-      self.price, self.time1 = csv.read(self.data_path,self.time_idx ) # pull the time_idx'th datapoint from price data
+      self.price, self.time1 = csv.read(self.log_file,self.time_idx ) # pull the time_idx'th datapoint from price data
       
     else:
       pause(resolution) # pause for time equal to the data resolution
-      csv.write(self.data_path,self.price,self.time1,--append)
+      csv.write(self.log_file,self.price,self.time1,--append)
     self.elapsed_time = self.time1 - self.time0
     self.time0        = self.time1
     
