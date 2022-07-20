@@ -10,9 +10,10 @@ class exchange:
     self.asset      =    target_asset # BTC
     self.bsset      = benchmark_asset # USD
     self.resolution =      resolution # [ms] time interval between samples (8640000)
-    self.duration   =        duration # [ms] time to read into the past for data for the model
+    self.duration   = history_duration # [ms] time to read into the past for data for the model
     self.is_demo    =         is_demo # for practicing the api trading with the exchange
     self.log_file   = historical_data_file # for recording spot prices and times
+    self.credentials = account_credentials
     
     if self.name is 'local':
       self.time_idx = 0
@@ -32,8 +33,8 @@ class exchange:
               'X-OTP': '', \
               'X-Device-Id': '963844ug98wfjqd9e8v39kq' }
         
-        data = { 'login'   : account_credentials[0], \
-                 'password': account_credentials[1]  }
+        data = { 'login'   : self.credentials[0], \
+                 'password': self.credentials[1]  }
         
         authentication = rq.post( url, data=data, headers=headers )#.json()
       self.auth = authentication
