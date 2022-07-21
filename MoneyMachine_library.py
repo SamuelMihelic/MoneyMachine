@@ -17,29 +17,33 @@ class exchange:
     self.bal_file   =    account_data_file # for recording balances of assets
     
     csv_bal = open(account_data_file+'.csv','w')
-    self.bal_writer = csv.writer(csv_bal, delimiter=',') # ??use DictWriter instead?
-    # open for writing and go to end of file to append
+    self.bal_writer = csv.writer(csv_bal, delimiter=',') # open for writing ?? use DictWriter instead ??
+    # !!! go to end of file to append !!! ??? self.bal_writer.line_num = -1 ???
     self.bal_writer.writerow([self.asset,self.bsset,'UNIX time [ms]'])
     
     if self.name is 'local':
       self.asset_balance =     baseline
       self.bsset_balance = 1 - baseline
-      self.time_idx = 0
+      # self.time_idx = 0
       csv_log = open(self.log_file+'.csv','r') # open for reading
     else:
       csv_log = open(self.log_file+'.csv','w') # open for writing
       self.credentials = account_credentials
       self.is_demo     =             is_demo # for practicing the api trading with the exchange
+      self.time0 = time.process_time()
       try:
         self.log_writer = csv.writer(csv_log, delimiter=',') # open for writing and go to end of file to append
         self.log_writer.writerow([self.asset,self.bsset,'UNIX time [ms]'])
       except:
-        print('no historical data log found: put file.csv in main directory')
+        print('Failed to find historical data log csv file in main directory')
       
     self.log_reader = csv.reader(csv_log, delimiter=',')
     self.log_reader.__next__() # skip the first row (headers)
     # for row in csv_reader:
-  
+
+    if self.name is 'local':
+      self.time0 = float(self.log_reader.__next__()[0])*1000+self.duration # time0 is one time window from start time of log file
+
   def authenticate( self ):
     # if self.name is 'local': no authentication
     if self.name is 'coinmetro': # https://documenter.getpostman.com/view/3653795/SVfWN6KS#intro
@@ -67,8 +71,9 @@ class exchange:
     
     if self.name is 'local': # pull from historical data file.csv
       # self.log_file = historic_data.csv
-      self.time_idx    += 1
-      self.price, self.time1 = self.log_reader.__next__ # pull the time_idx'th datapoint from price data
+      # self.time_idx    += 1
+      log_row = self.log_reader.__next__() # pull the time_idx'th datapoint from price data
+      self.price, self.time1 = float(log_row[0])*1000, float(log_row[-1])
       
     else:
       time.sleep(self.resolution*1000) # pause for a time [s] equal to the data resolution [ms]
@@ -85,7 +90,7 @@ class exchange:
       bsset_balance0 = self.bsset_balance 
       self.bsset_balance -= type * quantity / self.price # type +1 means buy, type -1 means sell (amount is in units of asset)
       is_not_saturated = self.bsset_balance >= 0 \
-                       & self.bsset_balance <= 1 # true if did not run out of asset or benchmark funds
+                     and self.bsset_balance <= 1 # true if did not run out of asset or benchmark funds
       if self.bsset_balance < 0:
         self.bsset_balance = 0
       if self.bsset_balance > 1:
@@ -104,54 +109,66 @@ class exchange:
       # self.asset_balance = response.assett
 
   def update_history( self ):
-    last__times = []
-    last_prices = []
-    duration = 0
-    while duration < self.duration:
-      last_log = self.log_reader.__next__()
-      print(last_log[-1])
-      print('NaN')
-      print(last_log[-1] is 'NaN' )
-      if not( last_log[-1] is 'NaN' ):
-        last_prices.append(float(last_log[7])     ) # Weighted_Price [bsset units]
-        last__times.append(float(last_log[0])*1000) # Timestamp [ms]
-      duration =           float(last_log[0])-last__times[0]
+    _time = -m.inf
+    # self.log_reader.line_num = 0 # start at top of file
+    # self.log_file.seek(0,0)
+    while _time < self.time0 - self.duration: # read past rows before the current time window 
+      log_row = self.log_reader.__next__()
+      if not( log_row[0] == 'UNIX TIME'): # !!! make sure this string encodes a number and not a header (break headers created whenever starting a new session to write to the log)
+        _time = float(log_row[ 0])*1000 # Timestamp [ms] # !!!! mke fxn don't copypasta
+
+    _times = []
+    prices = []
+    while _time < self.time0: # read from start of time window up to current time
+      log_row = self.log_reader.__next__()
+      price = float(log_row[-1])      # Weighted_Price [bsset units]
+      _time = float(log_row[ 0])*1000 # Timestamp [ms]
+      if not( log_row[-1] == 'NaN' ):
+        prices.append( price ) 
+        _times.append( _time )
+      # duration = _times[-1] \
+      #          - _times[ 0] # total time of history read in and recorded
+    
     if self.name is 'coinmetro':
-      start_time = str(int(time.process_time()-self.duration))
+      # self.time0 = time.process_time() # get current time 
+      start_time = str(int(self.time0-self.duration))
       end_time   = '' # optional parameter: should go to current time?
       # self.historical = rq.get('https://api.coinmetro.com/exchange/candles/BTCUSD/'+str(resolution)+'/'+str(start_time)'/'+str(end_time)
       # round self.resolution to closest valid option
       self.prices, self._times = rq.get('https://api.coinmetro.com/exchange/candles/'+self.asset+self.bsset+'/'+self.resolution+'/'+start_time+'/'+end_time).json    
     
     if self.name is 'local':
-      self.time0    = last__times[0] + self.duration # read the first entry and get the timestamp add one window for the model
-      self.prices, self._times = last_prices, last__times
+      # self.time0    = _times[0] + self.duration # read the first entry and get the timestamp add one window for the model
+      self.prices, self._times = prices, _times
     
     else:
-      self.time0 = self._times[-1] # most recent timestamp from the recent historical data from the exchange
+      # self.time0 = self._times[-1] # most recent timestamp from the recent historical data from the exchange
       
-      # read last time off the record
-      last_price, last_time = last_prices[-1], last__times[-1] 
+      ## read last time off the record
+      # last_price, last__time = last_prices[-1], last__times[-1] 
+      # last__time = self.log_reader.last ### !!!! get the last time stamp from the csv file
       
       # write any more recent data to the end of the historical csv file
-      
-      self.csv_reader.write(self.log_file,self.prices(self._times>last_time),\
-                                          self._times(self._times>last_time))
+      self.log_writer.writerows(self.log_file,self.prices(self._times>_time),\
+                                              self._times(self._times>_time))
+
+    self.time0 = self._times[-1] # most recent timestamp from the recent historical data  
+    
     return self.prices, self._times
 # if name is 'kucoin': # https://algotrading101.com/learn/kucoin-api-guide/
 # if name is 'coinbase':
 class data:
   def __init__( self, values, times ):
-    # read the values from the csv file instead
-    self.values = m.log( values ) # log transform the measurements (fold-change viewpoint)
-    self._times =         times
-    # !!!! MCap of the Asset (e.g. BTC) against the benchmark (e.g. USD) may be better choice than price
+    # ??? read the values from a csv file instead ???
+    self.values = [ m.log( v ) for v in values ] # log transform the measurements (fold-change viewpoint)
+    self._times =                        times
+    # ??? MCap of the Asset (e.g. BTC) against the benchmark (e.g. USD) may be better choice than price ???
 
   def update( self, value, time ):
     
     # one datapoint in, one out !! make sure that they have the same sampling resolution !!!
-    self.values(0).pop
-    self._times(0).pop
+    self.values.pop(0)
+    self._times.pop(0)
 
     # ??? is it more efficient to pop the last data point and append to the start ???    
     self.values.append(m.log(value))
@@ -164,16 +181,16 @@ class model:
     
   def fitting( self, data ):
     # time-weighted windowing with a half-Gaussian with standard deviation equal to the time constant
-    window_weights   = [ m.exp(-(t-data._times(-1))**2/self.tau**2/2) for t in zip( data._times )]
+    window_weights   = [ m.exp(-(t-data._times[-1])**2/self.tau**2/2) for t in data._times ]
     
-    weighted_values  = [ v * w     for v,w in zip( data.values,window_weights )]
-    
-    weighted_average = weighted_values.sum / window_weights.sum
+    weighted_values  = [ data.values[i] * window_weights[i]     for i in range(len(data._times))]
+
+    weighted_average =  sum( weighted_values ) / sum( window_weights )
     
     # calculate second moment?
     
     if     self.order is 0: # 'zero_order'
-      return weighted_average
+      self.value = weighted_average
     if self.order is 1:
       pass# (linear here... exponential after inverse-log transform)
     if self.order is 2:
@@ -182,6 +199,9 @@ class model:
       pass# add the next-most dominant harmonic
     #else:
     #  pass# throw error
+
+    return self.value
+
 class error:
   def __init__( self ):
     self.P = 0
@@ -195,7 +215,7 @@ class error:
 
 class PID:
   def __init__( self, PID_constants ):
-    self.constants =  PID_constants
+    self.P, self.I, self.D =  PID_constants
     
   def update( self, error ):
     self.response = self.P * error.P \

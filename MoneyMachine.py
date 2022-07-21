@@ -38,7 +38,7 @@ class exe:
         while True: # infinite loop
 
             #### Import Data:
-            self.exch.update
+            self.exch.update()
             #### Data_processing:
             self.data.update( self.exch.price, self.exch.time1 )
 
@@ -53,7 +53,7 @@ class exe:
             #### PID responder:
 
             # difference between model and measurement (fold-difference because of log-transform)
-            self.err.update( self.model.value - self.data.values[-1], self.elapsed_time )
+            self.err.update( self.model.value - self.data.values[-1], self.exch.elapsed_time )
 
             # PID response (inner product of errors and parameters)
             self.PID.update( self.err )
@@ -65,21 +65,21 @@ class exe:
                        - self.exch.asset_balance # [bsset units]
 
             # difference between current and response portfolio [bsset units]
-            trade_type     = m.sign( self.trade ) # +1 means buy, -1 means sell
-            trade_quantity =  m.abs( self.trade - self.exch.asset_balance )
+            trade_type     =  0 < self.trade - self.exch.asset_balance   # +1 means buy, -1 means sell
+            trade_quantity = abs( self.trade - self.exch.asset_balance )
             
             #### Trading (control)
             # Buying/Selling some amount [bsset units] of the target Asset (e.g. BTC) with the Benchmark asset (e.g. dollars)
             is_trade_successful = self.exch.trade( trade_type, trade_quantity )
 
             # check acct value as measured against the Benchmark_Asset (e.g. dollars)
-            message =[ str(self.exch.asset_balance),\
+            message =[ str(self.exch.asset_balance) \
                  +', '+str(self.exch.bsset_balance) ]
             print(message)
 
             #### Feedback to account manager !!!! move to inside self.exch
             # alert user that the algo wants to buy more of the asset and running out of money, or it is losing interest in the asset
-            if self.name is 'local':
+            if self.exch.name is 'local':
                 pass
             else: 
                 if ~is_trade_successful:
