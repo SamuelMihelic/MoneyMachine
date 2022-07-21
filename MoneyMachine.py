@@ -21,7 +21,8 @@ class exe:
         self.err = mm.error() # the error history will depend on the time elapsed during the control loop
 
         # resolution = 1e-3
-        self.res = Gaussian_window_length / 10
+        # self.res = Gaussian_window_length / 10
+        self.res = resolution
 
         ## Checking price hisotry
         values, times = self.exch.update_history
@@ -36,59 +37,59 @@ class exe:
         ### BEGIN Section: Control Loop
         while True: # infinite loop
 
-                    #### Import Data:
+            #### Import Data:
 
-                    # operative quantity is market cap (MCap). not price, this is a more reliable quantity (more information)
-                    self.exch.update
+            # operative quantity is market cap (MCap). not price, this is a more reliable quantity (more information)
+            self.exch.update
 
-                    self.data.update( price, self.exch.time0 )
+            self.data.update( price, self.exch.time0 )
 
-                    #### Data_processing:
+            #### Data_processing:
 
-                    # Model price estimate (parameter fitting for the price model)
-                    # ...for the recent price history in a (Half-Gaussian) weighted window centered at current_date
-                    # zer0 order value (average)
-                    #  1st order model (exponential)
-                    #  2nd order model (exponential*sinusoidal)
-                    # [ model_market_cap, (parameter_1, parameter_2)] = model1.fitting( data ) 
-                    log_model_market_cap = self.model.fitting( self.data ) 
+            # Model price estimate (parameter fitting for the price model)
+            # ...for the recent price history in a (Half-Gaussian) weighted window centered at current_date
+            # zer0 order value (average)
+            #  1st order model (exponential)
+            #  2nd order model (exponential*sinusoidal)
+            # [ model_market_cap, (parameter_1, parameter_2)] = model1.fitting( data ) 
+            log_model_market_cap = self.model.fitting( self.data ) 
 
-                    #### PID responder:
+            #### PID responder:
 
-                    # difference between model and measurement (fold-difference because of log-transform)
-                    self.err.update( log_market_cap - log_model_market_cap, self.elapsed_time )
+            # difference between model and measurement (fold-difference because of log-transform)
+            self.err.update( log_market_cap - log_model_market_cap, self.elapsed_time )
 
-                    # PID response (inner product of errors and parameters)
-                    self.PID.update( self.err )
+            # PID response (inner product of errors and parameters)
+            self.PID.update( self.err )
 
-                    # transform back to ratio land (from difference land), scaling the response to the account size, converting to benchmark units
-                    response_asset_by_benchmark = exp( self.PID.response ) * self.base * self.exch.asset_by_benchmark
+            # transform back to ratio land (from difference land), scaling the response to the account size, converting to benchmark units
+            response_asset_by_benchmark = exp( self.PID.response ) * self.base * self.exch.asset_by_benchmark
 
-                    # difference between current and response portfolio
-                    trade_type     = sign( response_asset_by_benchmark - self.exch.asset_by_benchmark ) # +1 means buy, -1 means sell
-                    trade_quantity =  abs( response_asset_by_benchmark - self.exch.asset_by_benchmark )
+            # difference between current and response portfolio
+            trade_type     = sign( response_asset_by_benchmark - self.exch.asset_by_benchmark ) # +1 means buy, -1 means sell
+            trade_quantity =  abs( response_asset_by_benchmark - self.exch.asset_by_benchmark )
 
-                    #### Trading (control)
-                    # Buying/Selling some amount of the target Asset (e.g. BTC) with the Benchmark asset (e.g. dollars)
-                    is_trade_successful = self.exch.trade( trade_type, trade_quantity )
+            #### Trading (control)
+            # Buying/Selling some amount of the target Asset (e.g. BTC) with the Benchmark asset (e.g. dollars)
+            is_trade_successful = self.exch.trade( trade_type, trade_quantity )
 
-                    # check acct value as measured against the Benchmark_Asset (e.g. dollars)
-                    asset_by_benchmark = self.exch.asset_by_benchmark
+            # check acct value as measured against the Benchmark_Asset (e.g. dollars)
+            asset_by_benchmark = self.exch.asset_by_benchmark
 
-                    #### Feedback to account manager !!!! move to inside self.exch
-                    # alert user that the algo wants to buy more of the asset and running out of money, or it is losing interest in the asset
-                    if ~is_trade_successful:
-                        break
-                    
-                    if self.name is local:
-                        pass
-                    else: 
-                        is_email_successful = Email_Service_API( manager_address, message )
-                        # consider shorting the position if we run out of the asset
+            #### Feedback to account manager !!!! move to inside self.exch
+            # alert user that the algo wants to buy more of the asset and running out of money, or it is losing interest in the asset
+            if ~is_trade_successful:
+                break
+            
+            if self.name is local:
+                pass
+            else: 
+                is_email_successful = Email_Service_API( manager_address, message )
+                # consider shorting the position if we run out of the asset
 
-                    #### Chill for a second: !!!! move to inside self.exch
-                    chill_duration = 60000 # a minute
+            #### Chill for a second: !!!! move to inside self.exch
+            chill_duration = 60000 # a minute
 
-                    pause( chill_duration )
+            pause( chill_duration )
 
         ### END Section: Control Loop
