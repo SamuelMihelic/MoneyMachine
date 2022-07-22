@@ -20,9 +20,9 @@ class exe:
         # baseline_proportion = base # portion of total benchmark invested
 
         # PID response constants (to be learned from historical testing)
-        self.PID = mm.PID( PID_constants ) # try multiple PIDs and average their outputs
+        self.PID = mm.PID( PID_constants, resolution ) # try multiple PIDs and average their outputs
 
-        self.err = mm.error() # the error history will depend on the time elapsed during the control loop... or it could be brought from time zero using more historic data
+        self.err = mm.error( resolution ) # the error history will depend on the time elapsed during the control loop... or it could be brought from time zero using more historic data
 
         ## Checking price hisotry
         self.exch.update_history()
@@ -40,7 +40,8 @@ class exe:
             #### Import Data:
             self.exch.update()
             #### Data_processing:
-            self.data.update( self.exch.price, self.exch.time1 )
+            self.data.update( self.exch.price,
+                              self.exch.time1  )
 
             # Model price estimate (parameter fitting for the price model)
             # ...for the recent price history in a (Half-Gaussian) weighted window centered at current_date
@@ -65,17 +66,26 @@ class exe:
                        - self.exch.asset_balance # [bsset units]
 
             # difference between current and response portfolio [bsset units]
-            trade_type     =  0 < self.trade - self.exch.asset_balance   # +1 means buy, -1 means sell
-            trade_quantity = abs( self.trade - self.exch.asset_balance )
+            
+            if self.trade  < 0: trade_type = -1
+            if self.trade  > 0: trade_type =  1  # +1 means buy, -1 means sell
+            if self.trade == 0: trade_type =  0
+
+            trade_quantity = abs( self.trade )
             
             #### Trading (control)
             # Buying/Selling some amount [bsset units] of the target Asset (e.g. BTC) with the Benchmark asset (e.g. dollars)
             is_trade_successful = self.exch.trade( trade_type, trade_quantity )
 
             # check acct value as measured against the Benchmark_Asset (e.g. dollars)
-            message =[ str(self.exch.asset_balance) \
+            message =[ str(self.exch.asset_balance)
                  +', '+str(self.exch.bsset_balance) ]
-            print(message)
+            if self.exch.asset_balance>0: print(message)
+            else:                       
+                print('NaN balance')
+
+
+                 
 
             #### Feedback to account manager !!!! move to inside self.exch
             # alert user that the algo wants to buy more of the asset and running out of money, or it is losing interest in the asset

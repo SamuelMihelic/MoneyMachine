@@ -27,12 +27,13 @@ class exchange:
       # self.time_idx = 0
       csv_log = open(self.log_file+'.csv','r') # open for reading
     else:
-      csv_log = open(self.log_file+'.csv','w') # open for writing
+      csv_log = open(self.log_file+'.csv','w') # open for appending (writing at end)
       self.credentials = account_credentials
       self.is_demo     =             is_demo # for practicing the api trading with the exchange
       self.time0 = time.process_time()
       try:
-        self.log_writer = csv.writer(csv_log, delimiter=',') # open for writing and go to end of file to append
+        self.log_writer = csv.writer(csv_log, delimiter=',') 
+
         self.log_writer.writerow([self.asset,self.bsset,'UNIX time [ms]'])
       except:
         print('Failed to find historical data log csv file in main directory')
@@ -72,9 +73,19 @@ class exchange:
     if self.name is 'local': # pull from historical data file.csv
       # self.log_file = historic_data.csv
       # self.time_idx    += 1
-      log_row = self.log_reader.__next__() # pull the time_idx'th datapoint from price data
-      self.price, self.time1 = float(log_row[0])*1000, float(log_row[-1])
       
+      # advance to the next row in the log file
+      log_row = self.log_reader.__next__() # pull the time_idx'th datapoint from price data
+      
+      self.price = 0 # to enter the loop
+      while not self.price: # continue reading until non NaN value reached
+        log_row = self.log_reader.__next__()
+        price = float(log_row[-1])      # Weighted_Price [bsset units]
+        _time = float(log_row[ 0])*1000 # Timestamp [ms]
+        if not( log_row[-1] == 'NaN' ):
+          self.price = price 
+          self.time1 = _time
+     
     else:
       time.sleep(self.resolution*1000) # pause for a time [s] equal to the data resolution [ms]
       self.log_writer.writerow([str(self.price),
@@ -87,16 +98,16 @@ class exchange:
     
   def trade( self, type, quantity ):
     if self.name is 'local':
-      bsset_balance0 = self.bsset_balance 
-      self.bsset_balance -= type * quantity / self.price # type +1 means buy, type -1 means sell (amount is in units of asset)
-      is_not_saturated = self.bsset_balance >= 0 \
-                     and self.bsset_balance <= 1 # true if did not run out of asset or benchmark funds
+      bsset_balance0      = self.bsset_balance 
+      self.bsset_balance -= type * quantity # type +1 means buy, type -1 means sell (amount is in units of bsset)
+      is_not_saturated    = self.bsset_balance >= 0 \
+                        and self.bsset_balance <= 1 # true if did not run out of asset or benchmark funds
       if self.bsset_balance < 0:
         self.bsset_balance = 0
       if self.bsset_balance > 1:
         self.bsset_balance = 1
-      bsset_spent = bsset_balance0 - self.bsset_balance
-      self.asset_balance += bsset_spent * self.price
+      bsset_spent         = bsset_balance0 - self.bsset_balance
+      self.asset_balance += bsset_spent
 
       self.bal_writer.writerow([str(self.asset_balance),
                                 str(self.bsset_balance), 
@@ -110,8 +121,9 @@ class exchange:
 
   def update_history( self ):
     _time = -m.inf
-    # self.log_reader.line_num = 0 # start at top of file
-    # self.log_file.seek(0,0)
+    # !!!!!! start at top of file (just below headers)
+    # self.log_reader.line_num = 0 or self.log_file.seek(0,0)
+    # self.log_reader.__next__()
     while _time < self.time0 - self.duration: # read past rows before the current time window 
       log_row = self.log_reader.__next__()
       if not( log_row[0] == 'UNIX TIME'): # !!! make sure this string encodes a number and not a header (break headers created whenever starting a new session to write to the log)
@@ -163,17 +175,19 @@ class data:
     self.values = [ m.log( v ) for v in values ] # log transform the measurements (fold-change viewpoint)
     self._times =                        times
     # ??? MCap of the Asset (e.g. BTC) against the benchmark (e.g. USD) may be better choice than price ???
-
+    self.duration = times[-1] \
+                  - times[ 0]
   def update( self, value, time ):
     
-    # one datapoint in, one out !! make sure that they have the same sampling resolution !!!
-    self.values.pop(0)
-    self._times.pop(0)
-
     # ??? is it more efficient to pop the last data point and append to the start ???    
     self.values.append(m.log(value))
     self._times.append(       time )
   
+    while self._times[-1] \
+        - self._times[ 1] > self.duration: # compare final time to the second to most initial time
+      self.values.pop(0)
+      self._times.pop(0)
+
 class model:
   def __init__( self, model_order, time_constant ):
     self.tau   = time_constant
@@ -203,19 +217,23 @@ class model:
     return self.value
 
 class error:
-  def __init__( self ):
+  def __init__( self, resolution ):
     self.P = 0
     self.I = 0
     self.D = 0
+
+    self.resolution = resolution
+
   
-  def update( self, P_error, duration ):
-    self.D = (      P_error - self.P ) / duration # P_error_current - P_error_before
+  def update( self, P_error, elapsed_time ):
+    self.D = (      P_error - self.P ) / elapsed_time * self.resolution # P_error_current - P_error_before
     self.P =        P_error
-    self.I = ( self.I       + self.P ) * duration
+    self.I = ( self.I       + self.P ) * elapsed_time / self.resolution # unitless time to avoid integral windup
 
 class PID:
-  def __init__( self, PID_constants ):
-    self.P, self.I, self.D =  PID_constants
+  def __init__( self, PID_constants, resolution ):
+    self.P, self.I, self.D = PID_constants[0], PID_constants[1] * resolution, \
+                                               PID_constants[2] / resolution
     
   def update( self, error ):
     self.response = self.P * error.P \
