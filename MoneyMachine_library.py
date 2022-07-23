@@ -15,13 +15,14 @@ class exchange:
     self.duration   = history_duration # [ms] time to read into the past for data for the model
     self.log_file   = historical_data_file # for recording spot prices and times
     self.bal_file   =    account_data_file # for recording balances of assets
+    self.numTrades  =           0  # running total of trades performed
     
     csv_bal = open(account_data_file+'.csv','w')
     self.bal_writer = csv.writer(csv_bal, delimiter=',') # open for writing ?? use DictWriter instead ??
     self.bal_writer.writerow(['Balances: '+self.asset     +' ['+self.bsset+']',
                                            self.bsset,'total ['+self.bsset+']',
-                        'exchange rate: ['+self.asset+     ']['+self.bsset+']',
-                                                         'elapsed time [days]'  ])     # !!! go to end of file to append !!! ??? self.bal_writer.line_num = -1 ???
+                        'exchange rate: ['+self.asset+     ']['+self.bsset+'] / initial',
+                                                         'elapsed time [days]','year', '# trades'  ])     # !!! go to end of file to append !!! ??? self.bal_writer.line_num = -1 ???
 
     if self.name is 'local':
       # self.asset_balance =     baseline / self.price # asset units
@@ -46,17 +47,18 @@ class exchange:
     # for row in csv_reader:
 
     if self.name is 'local':
-      self.time0 = float(self.log_reader.__next__()[0])*1000+self.duration # time0 is one time window from start time of log file
+      log_row = self.log_reader.__next__()
+      self.time0 = float(log_row[0])*1000+720000*self.duration # time0 is one time window from start time of log file
 
-    self.time00 = self.time0
-
+    self.time00  = self.time0
+    
   def authenticate( self ):
     # if self.name is 'local': no authentication
     if self.name is 'coinmetro': # https://documenter.getpostman.com/view/3653795/SVfWN6KS#intro
       # authenticate
       if self.is_demo:
         authentication = rq.get('https://api.coinmetro.com/open/demo/temp')
-      else:        
+      else:
         url = 'https://api.coinmetro.com/jwtDevice'
         headers = { 'Content-Type': 'application/x-www-form-urlencoded', \
               'X-OTP': '', \
@@ -113,19 +115,24 @@ class exchange:
         self.bsset_balance = bsset_balance0 + self.asset_balance * self.price # units of bsset
       bsset_spent         = bsset_balance0 - self.bsset_balance
       self.asset_balance += bsset_spent / self.price # units of asset
+      if self.asset_balance < 0: self.asset_balance = 0
+
+      if not( self.bsset_balance == bsset_balance0 ): self.numTrades += 1
 
       newRow_numbers = [ self.asset_balance * self.price,                          # bsset units
                          self.bsset_balance,                      
                          self.asset_balance * self.price + self.bsset_balance,  # exchange rate asset bsset
-                                              self.price, 
+                                              self.price / self.price00, 
                                            (  self.time1
-                                            - self.time00 ) / 1000 / 60 / 60 / 24 ] # unit of days
+                                            - self.time00 ) / 1000 / 60 / 60 / 24, self.time1 / 1000 / 60 / 60 / 24 / 365 +1970, self.numTrades ] # unit of days
     
       newRow = ["{:.2f}".format(newRow_numbers[0]),
                 "{:.2f}".format(newRow_numbers[1]),
                 "{:.2f}".format(newRow_numbers[2]),
-                "{:.2e}".format(newRow_numbers[3]),
-                "{:.1f}".format(newRow_numbers[4]) ] # print("Geeks : %2d, Portal : %5.2f" % (1, 05.333))
+                "{:.2f}".format(newRow_numbers[3]),
+                "{:.0f}".format(newRow_numbers[4]),
+                "{:.0f}".format(newRow_numbers[5]),
+                "{:.0e}".format(newRow_numbers[6]) ] # print("Geeks : %2d, Portal : %5.2f" % (1, 05.333))
 
       self.bal_writer.writerow(newRow)
       
@@ -144,6 +151,8 @@ class exchange:
       log_row = self.log_reader.__next__()
       if not( log_row[0] == 'UNIX TIME'): # !!! make sure this string encodes a number and not a header (break headers created whenever starting a new session to write to the log)
         _time = float(log_row[ 0])*1000 # Timestamp [ms] # !!!! mke fxn don't copypasta
+
+    self.price00  = float(log_row[-1])
 
     _times = []
     prices = []
@@ -255,3 +264,7 @@ class PID:
     self.response = self.P * error.P \
                   + self.I * error.I \
                   + self.D * error.D
+
+
+    if str(self.response) == 'nan':
+      self.response = 0

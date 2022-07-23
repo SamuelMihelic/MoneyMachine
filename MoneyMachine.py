@@ -5,6 +5,7 @@
             # SAM 2/19/22
 from cmath import inf
 import MoneyMachine_library as mm
+import math as m
 
 class exe:
     def __init__( self, baseline_proportion, PID_constants, Gaussian_window_length, model_order, exchange_name, historical_data_file, account_data_file, target_asset, benchmark_asset, is_demo, account_credentials ):
@@ -39,8 +40,8 @@ class exe:
 
         print(['Balances: '+target_asset     +' ['+benchmark_asset+']',
                                                  benchmark_asset,'total ['+benchmark_asset+']',
-                              'exchange rate: ['+target_asset+     ']['+benchmark_asset+']',
-                                                               'elapsed time [days]'  ])
+                                'exchange rate: ['+target_asset+     ']['+benchmark_asset+'], / initial',
+                                                               'elapsed time [days]','year'  ])
 
         ### BEGIN Section: Control Loop
         while True: # infinite loop
@@ -61,16 +62,20 @@ class exe:
 
             #### PID responder:
             # difference between model and measurement (fold-difference because of log-transform)
-            self.err.update( self.model.value - self.data.values[-1], self.exch.elapsed_time )
+            self.err.update( self.data.values[-1] - self.model.value, self.exch.elapsed_time )
 
             # PID response (inner product of errors and parameters)
             self.PID.update( self.err )
 
             # adjusting the PID response by the baseline proportion and scaling to the account size
-            self.asset_balance = ( self.PID.response + self.base ) * ( self.exch.asset_balance * self.exch.price + self.exch.bsset_balance ) # [bsset units]
+            # self._PID_asset_balance = ( self.PID.response + self.base ) * ( self.exch.asset_balance * self.exch.price + self.exch.bsset_balance ) # [bsset units]
+            self._PID_asset_balance = m.exp(self.PID.response) * self.exch.asset_balance # [asset units]
 
-            self.trade =      self.asset_balance \
-                       - self.exch.asset_balance * self.exch.price # [bsset units]
+            if str(self._PID_asset_balance) == 'nan':
+                self._PID_asset_balance = inf
+
+            self.trade = (   self._PID_asset_balance 
+                           - self.exch.asset_balance ) * self.exch.price # [bsset units]
 
             # difference between current and response portfolio [bsset units]
             
@@ -88,7 +93,7 @@ class exe:
             total_elapsed_time += self.exch.elapsed_time
 
             if total_elapsed_time > elapsed_time0 + readout_wait_time:
-                print(message)
+                print(",    ".join(message))
                 elapsed_time0 = total_elapsed_time
             
 
