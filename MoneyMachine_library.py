@@ -6,7 +6,7 @@ import math as m
 # urllib.parse.urlencode(dictionary, doseq=True)
 
 class exchange: 
-  def __init__( self, history_duration, resolution, exchange_name, historical_data_file, account_data_file, target_asset, benchmark_asset, is_demo, account_credentials, baseline ):
+  def __init__( self, history_duration, resolution, exchange_name, historical_data_file, account_data_file, target_asset, benchmark_asset, is_demo, account_credentials ):
     
     self.name       =   exchange_name # coinmetro, local
     self.asset      =    target_asset # BTC
@@ -18,13 +18,16 @@ class exchange:
     
     csv_bal = open(account_data_file+'.csv','w')
     self.bal_writer = csv.writer(csv_bal, delimiter=',') # open for writing ?? use DictWriter instead ??
-    # !!! go to end of file to append !!! ??? self.bal_writer.line_num = -1 ???
-    self.bal_writer.writerow([self.asset,self.bsset,'UNIX time [ms]'])
-    
+    self.bal_writer.writerow(['Balances: '+self.asset     +' ['+self.bsset+']',
+                                           self.bsset,'total ['+self.bsset+']',
+                        'exchange rate: ['+self.asset+     ']['+self.bsset+']',
+                                                         'elapsed time [days]'  ])     # !!! go to end of file to append !!! ??? self.bal_writer.line_num = -1 ???
+
     if self.name is 'local':
-      self.asset_balance =     baseline
-      self.bsset_balance = 1 - baseline
-      # self.time_idx = 0
+      # self.asset_balance =     baseline / self.price # asset units
+      # self.bsset_balance = 1 - baseline              # bsset units
+      self.asset_balance = 0 # asset units
+      self.bsset_balance = 1 # bsset units 1 BTC in USD in 2012
       csv_log = open(self.log_file+'.csv','r') # open for reading
     else:
       csv_log = open(self.log_file+'.csv','w') # open for appending (writing at end)
@@ -44,6 +47,8 @@ class exchange:
 
     if self.name is 'local':
       self.time0 = float(self.log_reader.__next__()[0])*1000+self.duration # time0 is one time window from start time of log file
+
+    self.time00 = self.time0
 
   def authenticate( self ):
     # if self.name is 'local': no authentication
@@ -96,24 +101,35 @@ class exchange:
 
     return self.price, self.time1
     
-  def trade( self, type, quantity ):
+  def trade( self, type, quantity ): #  quantity in bsset units
     if self.name is 'local':
       bsset_balance0      = self.bsset_balance 
       self.bsset_balance -= type * quantity # type +1 means buy, type -1 means sell (amount is in units of bsset)
-      is_not_saturated    = self.bsset_balance >= 0 \
-                        and self.bsset_balance <= 1 # true if did not run out of asset or benchmark funds
+      # is_not_saturated    = self.bsset_balance >= 0 \
+      #                   and self.bsset_balance <= bsset_balance0 + self.asset_balance # true if did not run out of asset or benchmark funds
       if self.bsset_balance < 0:
         self.bsset_balance = 0
-      if self.bsset_balance > 1:
-        self.bsset_balance = 1
+      if self.bsset_balance > bsset_balance0 + self.asset_balance * self.price:
+        self.bsset_balance = bsset_balance0 + self.asset_balance * self.price # units of bsset
       bsset_spent         = bsset_balance0 - self.bsset_balance
-      self.asset_balance += bsset_spent
+      self.asset_balance += bsset_spent / self.price # units of asset
 
-      self.bal_writer.writerow([str(self.asset_balance),
-                                str(self.bsset_balance), 
-                                str(self.time1        ) ])
+      newRow_numbers = [ self.asset_balance * self.price,                          # bsset units
+                         self.bsset_balance,                      
+                         self.asset_balance * self.price + self.bsset_balance,  # exchange rate asset bsset
+                                              self.price, 
+                                           (  self.time1
+                                            - self.time00 ) / 1000 / 60 / 60 / 24 ] # unit of days
+    
+      newRow = ["{:.2f}".format(newRow_numbers[0]),
+                "{:.2f}".format(newRow_numbers[1]),
+                "{:.2f}".format(newRow_numbers[2]),
+                "{:.2e}".format(newRow_numbers[3]),
+                "{:.1f}".format(newRow_numbers[4]) ] # print("Geeks : %2d, Portal : %5.2f" % (1, 05.333))
 
-      return self.asset_balance, self.bsset_balance, is_not_saturated
+      self.bal_writer.writerow(newRow)
+      
+      return newRow
 
     if self.name is 'coinmetro':
       pass # response = api for trading
@@ -169,6 +185,7 @@ class exchange:
     return self.prices, self._times
 # if name is 'kucoin': # https://algotrading101.com/learn/kucoin-api-guide/
 # if name is 'coinbase':
+# if name is 'robbhinhood': !!!!!! fewer transaction fees ?????
 class data:
   def __init__( self, values, times ):
     # ??? read the values from a csv file instead ???
@@ -195,11 +212,10 @@ class model:
     
   def fitting( self, data ):
     # time-weighted windowing with a half-Gaussian with standard deviation equal to the time constant
-    window_weights   = [ m.exp(-(t-data._times[-1])**2/self.tau**2/2) for t in data._times ]
-    
-    weighted_values  = [ data.values[i] * window_weights[i]     for i in range(len(data._times))]
+    window_weights   = [ m.exp(-(t-data._times[-1])**2/self.tau**2/2) for t in           data._times  ]
+    weighted_values  = [           data.values[i] * window_weights[i] for i in range(len(data._times))]
 
-    weighted_average =  sum( weighted_values ) / sum( window_weights )
+    weighted_average = sum( weighted_values ) / sum( window_weights )
     
     # calculate second moment?
     
@@ -217,23 +233,23 @@ class model:
     return self.value
 
 class error:
-  def __init__( self, resolution ):
+  def __init__( self, time_constant ):
     self.P = 0
     self.I = 0
     self.D = 0
 
-    self.resolution = resolution
+    self.time_constant = time_constant
 
-  
   def update( self, P_error, elapsed_time ):
-    self.D = (      P_error - self.P ) / elapsed_time * self.resolution # P_error_current - P_error_before
-    self.P =        P_error
-    self.I = ( self.I       + self.P ) * elapsed_time / self.resolution # unitless time to avoid integral windup
+    # error time made unitless by comparing to the time constant of the model
+
+    self.D  = ( P_error - self.P ) / elapsed_time * self.time_constant # P_error_current - P_error_before
+    self.P  =   P_error
+    self.I +=   P_error            * elapsed_time / self.time_constant # unitless time
 
 class PID:
-  def __init__( self, PID_constants, resolution ):
-    self.P, self.I, self.D = PID_constants[0], PID_constants[1] * resolution, \
-                                               PID_constants[2] / resolution
+  def __init__( self, PID_constants ):
+    self.P, self.I, self.D = PID_constants[0], PID_constants[1], PID_constants[2]
     
   def update( self, error ):
     self.response = self.P * error.P \
