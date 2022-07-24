@@ -48,8 +48,9 @@ class exchange:
 
     if self.name is 'local':
       log_row = self.log_reader.__next__()
-      self.time0 = float(log_row[0])*1000+720000*self.duration # time0 is one time window from start time of log file
-
+      # self.time0 = float(log_row[0])*1000+self.duration # time0 is one time window from start time of log file
+      starting_year = 2018
+      self.time0 = ( starting_year-1970 ) * 1000 * 60 * 60 * 24 * 365 # time0 is one time window from start time of log file
     self.time00  = self.time0
     
   def authenticate( self ):
@@ -195,7 +196,7 @@ class exchange:
 # if name is 'kucoin': # https://algotrading101.com/learn/kucoin-api-guide/
 # if name is 'coinbase':
 # if name is 'robbhinhood': !!!!!! fewer transaction fees ?????
-class data:
+class data: # ?! put data class inside exchange class ?!
   def __init__( self, values, times ):
     # ??? read the values from a csv file instead ???
     self.values = [ m.log( v ) for v in values ] # log transform the measurements (fold-change viewpoint)
@@ -257,14 +258,17 @@ class error:
     self.I +=   P_error            * elapsed_time / self.time_constant # unitless time
 
 class PID:
-  def __init__( self, PID_constants ):
+  def __init__( self, PID_constants, gain ):
     self.P, self.I, self.D = PID_constants[0], PID_constants[1], PID_constants[2]
+
+    self.gain = gain
     
   def update( self, error ):
-    self.response = self.P * error.P \
-                  + self.I * error.I \
-                  + self.D * error.D
+    self.response  = self.P * error.P \
+                   + self.I * error.I \
+                   + self.D * error.D
 
+    self.response *= self.gain
 
     if str(self.response) == 'nan':
       self.response = 0

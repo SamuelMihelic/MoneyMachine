@@ -8,7 +8,7 @@ import MoneyMachine_library as mm
 import math as m
 
 class exe:
-    def __init__( self, baseline_proportion, PID_constants, Gaussian_window_length, model_order, exchange_name, historical_data_file, account_data_file, target_asset, benchmark_asset, is_demo, account_credentials ):
+    def __init__( self, baseline_proportion, PID_constants, PID_gain, Gaussian_window_length, model_order, exchange_name, historical_data_file, account_data_file, target_asset, benchmark_asset, is_demo, account_credentials ):
         
         # resolution = 1e-3
         # resolution = Gaussian_window_length / 10
@@ -21,7 +21,7 @@ class exe:
         # baseline_proportion = base # portion of total benchmark invested
 
         # PID response constants (to be learned from historical testing)
-        self.PID = mm.PID( PID_constants ) # try multiple PIDs and average their outputs
+        self.PID = mm.PID( PID_constants, PID_gain ) # try multiple PIDs and average their outputs
 
         self.err = mm.error( Gaussian_window_length ) # the error history will depend on the time elapsed during the control loop... or it could be brought from time zero using more historic data
 
@@ -35,6 +35,7 @@ class exe:
         self.base = baseline_proportion
 
         readout_wait_time = 1000 * 60 * 60 * 24 # one day in ms
+        # readout_wait_time = resolution
         elapsed_time0 = -inf
         total_elapsed_time = 0
 
@@ -69,7 +70,9 @@ class exe:
 
             # adjusting the PID response by the baseline proportion and scaling to the account size
             # self._PID_asset_balance = ( self.PID.response + self.base ) * ( self.exch.asset_balance * self.exch.price + self.exch.bsset_balance ) # [bsset units]
-            self._PID_asset_balance = m.exp(self.PID.response) * self.exch.asset_balance # [asset units]
+            # self._PID_asset_balance = m.exp(self.PID.response) * self.exch.asset_balance # [asset units]
+            self._PID_asset_balance = m.exp(self.PID.response) * self.base * (   self.exch.asset_balance 
+                                                                               + self.exch.bsset_balance / self.exch.price)
 
             if str(self._PID_asset_balance) == 'nan':
                 self._PID_asset_balance = inf
