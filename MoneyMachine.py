@@ -63,7 +63,10 @@ class exe:
 
             #### PID responder:
             # difference between model and measurement (fold-difference because of log-transform)
-            self.err.update( self.data.values[-1] - self.model.value, self.exch.elapsed_time )
+            P_error = self.data.values[-1] \
+                    - self.model.value
+
+            self.err.update( P_error, self.exch.elapsed_time )
 
             # PID response (inner product of errors and parameters)
             self.PID.update( self.err )
@@ -71,8 +74,13 @@ class exe:
             # adjusting the PID response by the baseline proportion and scaling to the account size
             # self._PID_asset_balance = ( self.PID.response + self.base ) * ( self.exch.asset_balance * self.exch.price + self.exch.bsset_balance ) # [bsset units]
             # self._PID_asset_balance = m.exp(self.PID.response) * self.exch.asset_balance # [asset units]
-            self._PID_asset_balance = m.exp(self.PID.response) * self.base * (   self.exch.asset_balance 
-                                                                               + self.exch.bsset_balance / self.exch.price)
+            # if self.PID.response > m.log(2):
+            #     self.PID.response = m.log(2):
+
+            # self._PID_asset_balance = m.exp(self.PID.response) * self.base * (   self.exch.asset_balance 
+            #                                                                    + self.exch.bsset_balance / self.exch.price)
+            self._PID_asset_balance = ( self.PID.response + self.base ) * (   self.exch.asset_balance 
+                                                                            + self.exch.bsset_balance / self.exch.price)
 
             if str(self._PID_asset_balance) == 'nan':
                 self._PID_asset_balance = inf

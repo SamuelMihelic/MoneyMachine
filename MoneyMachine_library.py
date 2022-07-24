@@ -221,24 +221,36 @@ class model:
     self.order = model_order
     
   def fitting( self, data ):
-    # time-weighted windowing with a half-Gaussian with standard deviation equal to the time constant
-    window_weights   = [ m.exp(-(t-data._times[-1])**2/self.tau**2/2) for t in           data._times  ]
-    weighted_values  = [           data.values[i] * window_weights[i] for i in range(len(data._times))]
 
-    weighted_average = sum( weighted_values ) / sum( window_weights )
+    # if self.order is 3: 
+    #   pass# add the next-most dominant harmonic
+
+    # if self.order is 2:
+    #   pass# add the      most dominant harmonic
+
+    if self.order is 1: # subtract off a linear model (which is an exponential after inverse-log transform)
+      window__weights_d_dt = [ -t*m.exp(-(t-data._times[-1])**2/self.tau**2/2) for t in data._times ] # derivative of Gaussian
+      window__weights      = [    m.exp(-(t-data._times[-1])**2/self.tau**2/2) for t in data._times ]
+
+      weighted_values_d_dt = [ data.values[ i]*window__weights_d_dt[i] for i in range(len(data._times))]
+      weighted_values      = [ data.values[ i]*window__weights[     i] for i in range(len(data._times))]
+      
+      dv_dt = (   sum( weighted_values ) 
+                / sum( window__weights ) - sum( weighted_values_d_dt ) 
+                                         / sum( window__weights_d_dt )) / self.tau # derivative approximation
+
+      data.values = [   data.values[i] 
+                      - data._times[i] * dv_dt for i in range(len(data._times))] # redefine local data by subtracting linear fit
+
+    # time-weighted windowing with a half-Gaussian with standard deviation equal to the time constant
+    window__weights   = [ m.exp(-(t-data._times[-1])**2/self.tau**2/2) for t in           data._times  ]
+    weighted_values   = [           data.values[ i]*window__weights[i] for i in range(len(data._times))]
+
+    weighted_average = sum( weighted_values ) \
+                     / sum( window__weights )
     
-    # calculate second moment?
-    
-    if     self.order is 0: # 'zero_order'
-      self.value = weighted_average
-    if self.order is 1:
-      pass# (linear here... exponential after inverse-log transform)
-    if self.order is 2:
-      pass# add the      most dominant harmonic
-    if self.order is 3: 
-      pass# add the next-most dominant harmonic
-    #else:
-    #  pass# throw error
+    self.value = weighted_average 
+    # # ??? calculate second moment too ???
 
     return self.value
 
