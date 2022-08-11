@@ -8,13 +8,13 @@ import MoneyMachine_library as mm
 import math as m
 
 class exe:
-    def __init__( self, baseline_proportion, PID_constants, PID_gain, Gaussian_window_length, model_order, exchange_name, historical_data_file, account_data_file, target_asset, benchmark_asset, is_demo, account_credentials ):
+    def __init__( self, baseline_proportion, PID_constants, PID_gain, model_time_constant, data_time_constant, model_order, exchange_name, historical_data_file, account_data_file, target_asset, benchmark_asset, is_demo, account_credentials ):
         
         # resolution = 1e-3
         # resolution = Gaussian_window_length / 10
         resolution = 60000 # one data point read in per minute
 
-        history_duration = 4 * Gaussian_window_length
+        history_duration = 4 * model_time_constant
         
         self.exch = mm.exchange( history_duration, resolution, exchange_name, historical_data_file, account_data_file, target_asset, benchmark_asset, is_demo, account_credentials )
 
@@ -23,14 +23,14 @@ class exe:
         # PID response constants (to be learned from historical testing)
         self.PID = mm.PID( PID_constants, PID_gain ) # try multiple PIDs and average their outputs
 
-        self.err = mm.error( Gaussian_window_length ) # the error history will depend on the time elapsed during the control loop... or it could be brought from time zero using more historic data
+        self.err = mm.error( model_time_constant ) # the error history will depend on the time elapsed during the control loop... or it could be brought from time zero using more historic data
 
         ## Checking price hisotry
         self.exch.update_history()
 
-        self.data  = mm.data( self.exch.prices, self.exch._times ) # e.g. values in $$->math.log($$), times in miliseconds since epoch
+        self.data  = mm.data( self.exch.prices, self.exch._times, data_time_constant ) # e.g. values in $$->math.log($$), times in miliseconds since epoch
 
-        self.model = mm.model( model_order, Gaussian_window_length ) # sliding window looking into the past from current
+        self.model = mm.model( model_order, model_time_constant ) # sliding window looking into the past from current
 
         self.base = baseline_proportion
 
@@ -40,9 +40,9 @@ class exe:
         total_elapsed_time = 0
 
         print(['Balances: '+target_asset     +' ['+benchmark_asset+']',
-                                                 benchmark_asset,'total ['+benchmark_asset+']',
-                                'exchange rate: ['+target_asset+     ']['+benchmark_asset+'], / initial',
-                                                               'elapsed time [days]','year'  ])
+                                                   benchmark_asset,'total ['+benchmark_asset+']',
+                                'exchange rate: ['+target_asset+   ']['     +benchmark_asset+'], / initial',
+                                                                              'elapsed time [days]','year'  ])
 
         ### BEGIN Section: Control Loop
         while True: # infinite loop
@@ -62,10 +62,13 @@ class exe:
             self.model.fitting( self.data ) 
 
             #### PID responder:
-            # difference between model and measurement (fold-difference because of log-transform)
-            P_error = self.data.values[-1] \
-                    - self.model.value
+            # # difference between model and measurement (fold-difference because of log-transform)
+            # P_error = self.data.values[-1] \
+            #         - self.model.value
+            P_error = self.data.trading_price \
+                    - self.model.value # !!!!! normalize by (?smoothed by trading time constant?) L2 error from model fitting
 
+            # error recording
             self.err.update( P_error, self.exch.elapsed_time )
 
             # PID response (inner product of errors and parameters)

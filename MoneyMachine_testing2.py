@@ -14,7 +14,7 @@ import MoneyMachine
 ## HypeRider: ---------------------------------------------------- zero order
 # MM = MoneyMachine.exe( 0.5, (  0, 0,  1  ), inf, 1000 * 60         , 0, 'local', 'log', 'bal','BTC', 'USD', True, ('Username','Password')) # x14274 # 6e5 trades
 # MM = MoneyMachine.exe( 0.5, (  0, 0,  1  ), inf, 1000 * 60 * 60    , 0, 'local', 'log', 'bal','BTC', 'USD', True, ('Username','Password')) # x204
-# MM = MoneyMachine.exe( 0.5, (  0, 0,  1  ), inf, 1000 * 60 * 60 * 2, 0, 'local', 'log', 'bal','BTC', 'USD', True, ('Username','Password')) # x128
+MM = MoneyMachine.exe( 0.5, (  0, 0,  1  ), inf, 1000 * 60 * 60 * 24, 1000 * 60 * 60 * 18, 0, 'local', 'log', 'bal','BTC', 'USD', True, ('Username','Password')) # x128
 # MM = MoneyMachine.exe( 0.5, (  1, 0,  1  ), inf, 1000 * 60         , 0, 'local', 'log', 'bal','BTC', 'USD', True, ('Username','Password')) # x1693
 # MM = MoneyMachine.exe( 0.5, ( -1, 0, 1e3 ), inf, 1000 * 60         , 0, 'local', 'log', 'bal','BTC', 'USD', True, ('Username','Password')) # x14329
 # MM = MoneyMachine.exe( 0.5, ( -1, 0, 1e2 ), inf, 1000 * 60         , 0, 'local', 'log', 'bal','BTC', 'USD', True, ('Username','Password')) # x13565

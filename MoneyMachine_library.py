@@ -2,6 +2,7 @@ import csv
 import time
 # import requests as rq
 import math as m
+from typing_extensions import Self
 # import urllib
 # urllib.parse.urlencode(dictionary, doseq=True)
 
@@ -197,13 +198,16 @@ class exchange:
 # if name is 'coinbase':
 # if name is 'robbhinhood': !!!!!! fewer transaction fees ?????
 class data: # ?! put data class inside exchange class ?!
-  def __init__( self, values, times ):
+  def __init__( self, values, times, time_constant ):
     # ??? read the values from a csv file instead ???
     self.values = [ m.log( v ) for v in values ] # log transform the measurements (fold-change viewpoint)
     self._times =                        times
     # ??? MCap of the Asset (e.g. BTC) against the benchmark (e.g. USD) may be better choice than price ???
     self.duration = times[-1] \
                   - times[ 0]
+
+    self.time_consant = time_constant
+
   def update( self, value, time ):
     
     # ??? is it more efficient to pop the last data point and append to the start ???    
@@ -214,6 +218,13 @@ class data: # ?! put data class inside exchange class ?!
         - self._times[ 1] > self.duration: # compare final time to the second to most initial time
       self.values.pop(0)
       self._times.pop(0)
+
+    # time-weighted windowing with a half-Gaussian with standard deviation equal to the time constant
+    window__weights   = [ m.exp(-(t-self._times[-1])**2/self.time_consant**2/2) for t in           self._times  ]
+    weighted_values   = [           self.values[ i]  *   window__weights[i]     for i in range(len(self._times))]
+
+    self.trading_price = sum( weighted_values ) \
+                       / sum( window__weights )
 
 class model:
   def __init__( self, model_order, time_constant ):
@@ -284,3 +295,17 @@ class PID:
 
     if str(self.response) == 'nan':
       self.response = 0
+
+# !!!!! unused function, use this to improve readability and remove repeated code !!!!!!!!!!
+def window_operation( values, _times, time_constant, method ):
+
+  if method is 'Gaussian':
+
+          # time-weighted windowing with a half-Gaussian with standard deviation equal to the time constant
+    window__weights   = [ m.exp(-(t-_times[-1])**2/time_constant**2/2) for t in           _times  ]
+    weighted_values   = [           values[ i] *  window__weights[i]   for i in range(len(_times))]
+
+    weighted_average = sum( weighted_values ) \
+                     / sum( window__weights )
+
+    return weighted_average 
