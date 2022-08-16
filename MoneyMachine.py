@@ -42,7 +42,7 @@ class exe:
         print(['Balances: '+target_asset     +' ['+benchmark_asset+']',
                                                    benchmark_asset,'total ['+benchmark_asset+']',
                                 'exchange rate: ['+target_asset+   ']['     +benchmark_asset+'], / initial',
-                                                                              'elapsed time [days]','year'  ])
+                                                                              'elapsed time [days]','year','# of trades' ])
 
         ### BEGIN Section: Control Loop
         while True: # infinite loop
