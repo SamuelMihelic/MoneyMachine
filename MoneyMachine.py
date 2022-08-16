@@ -23,7 +23,7 @@ class exe:
         # PID response constants (to be learned from historical testing)
         self.PID = mm.PID( PID_constants, PID_gain ) # try multiple PIDs and average their outputs
 
-        self.err = mm.error(( model_time_constant ** 2 - data_time_constant ** 2 ) ** 0.5 ) # the error history will depend on the time elapsed during the control loop... or it could be brought from time zero using more historic data
+        self.err = mm.error( model_time_constant - data_time_constant ) # the error history will depend on the time elapsed during the control loop... or it could be brought from time zero using more historic data
 
         ## Checking price hisotry
         self.exch.update_history()
