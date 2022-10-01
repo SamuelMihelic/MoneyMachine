@@ -25,8 +25,11 @@ class exe:
 
         self.err = mm.error( model_time_constant - data_time_constant ) # the error history will depend on the time elapsed during the control loop... or it could be brought from time zero using more historic data
 
-        ## Checking price hisotry
+        # Checking price hisotry
         self.exch.update_history()
+
+        # authenticating user acct credentials
+        self.exch.authenticate()
 
         self.data  = mm.data( self.exch.prices, self.exch._times, data_time_constant ) # e.g. values in $$->math.log($$), times in miliseconds since epoch
 

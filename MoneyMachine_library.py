@@ -1,3 +1,10 @@
+import urllib.parse
+import hashlib
+import hmac
+import base64
+import requests as rq
+# import time
+
 import csv
 import time
 # import requests as rq
@@ -9,21 +16,25 @@ from typing_extensions import Self
 class exchange: 
   def __init__( self, history_duration, resolution, exchange_name, historical_data_file, account_data_file, target_asset, benchmark_asset, is_demo, account_credentials ):
     
-    self.name       =   exchange_name # coinmetro, local
-    self.asset      =    target_asset # BTC
-    self.bsset      = benchmark_asset # USD
+    self.name       =   exchange_name # binanceUS, coinmetro, local, ...
+    self.asset      =    target_asset # BTC, ...
+    self.bsset      = benchmark_asset # USD, ...
     self.resolution =      resolution # [ms] time interval between samples (8640000)
     self.duration   = history_duration # [ms] time to read into the past for data for the model
     self.log_file   = historical_data_file # for recording spot prices and times
     self.bal_file   =    account_data_file # for recording balances of assets
     self.numTrades  =           0  # running total of trades performed
     
-    csv_bal = open(account_data_file+'.csv','w')
-    self.bal_writer = csv.writer(csv_bal, delimiter=',') # open for writing ?? use DictWriter instead ??
+    if self.name is 'local':
+      csv_bal = open(account_data_file+'.csv','w') # open for (over-)writing
+    else:
+      csv_bal = open(account_data_file+'.csv','a') # open for appending
+    
+    self.bal_writer = csv.writer(csv_bal, delimiter=',')
     self.bal_writer.writerow(['Balances: '+self.asset     +' ['+self.bsset+']',
                                            self.bsset,'total ['+self.bsset+']',
                         'exchange rate: ['+self.asset+     ']['+self.bsset+'] / initial',
-                                                         'elapsed time [days]','year', '# trades'  ])     # !!! go to end of file to append !!! ??? self.bal_writer.line_num = -1 ???
+                                                         'elapsed time [days]','year', '# trades'  ])
 
     if self.name is 'local':
       # self.asset_balance =     baseline / self.price # asset units
@@ -32,7 +43,7 @@ class exchange:
       self.bsset_balance = 1 # bsset units 1 BTC in USD in 2012
       csv_log = open(self.log_file+'.csv','r') # open for reading
     else:
-      csv_log = open(self.log_file+'.csv','w') # open for appending (writing at end)
+      csv_log = open(self.log_file+'.csv','a') # open for appending (writing at end)
       self.credentials = account_credentials
       self.is_demo     =             is_demo # for practicing the api trading with the exchange
       self.time0 = time.process_time()
@@ -42,6 +53,9 @@ class exchange:
         self.log_writer.writerow([self.asset,self.bsset,'UNIX time [ms]'])
       except:
         print('Failed to find historical data log csv file in main directory')
+      if self.name is 'binanceUS':
+        self.api_url = "https://api.binance.us"
+        self.recvWindow = ''
       
     self.log_reader = csv.reader(csv_log, delimiter=',')
     self.log_reader.__next__() # skip the first row (headers)
@@ -55,9 +69,12 @@ class exchange:
     self.time00  = self.time0
     
   def authenticate( self ):
-    # if self.name is 'local': no authentication
+  # if self.name is 'local': no authentication
+    if self.name is 'binanceUS':
+      self.api_key = input( 'Enter API key:' )
+      self.api_sec = input( 'Enter API sec:' )
+
     if self.name is 'coinmetro': # https://documenter.getpostman.com/view/3653795/SVfWN6KS#intro
-      # authenticate
       if self.is_demo:
         authentication = rq.get('https://api.coinmetro.com/open/demo/temp')
       else:
@@ -76,7 +93,7 @@ class exchange:
     if self.name is 'coinmetro': # get current exchange rate from exchange
       response = rq.get('https://api.coinmetro.com/exchange/prices').json()
       self.price  = response.price.BTC
-      # self.time1  = time.process_time()
+    # self.time1  = time.process_time()
       self.time1  = response.time
     
     if self.name is 'local': # pull from historical data file.csv
@@ -112,9 +129,9 @@ class exchange:
       # is_not_saturated    = self.bsset_balance >= 0 \
       #                   and self.bsset_balance <= bsset_balance0 + self.asset_balance # true if did not run out of asset or benchmark funds
       if self.bsset_balance < 0:
-        self.bsset_balance = 0
+         self.bsset_balance = 0
       if self.bsset_balance > bsset_balance0 + self.asset_balance * self.price:
-        self.bsset_balance = bsset_balance0 + self.asset_balance * self.price # units of bsset
+         self.bsset_balance = bsset_balance0 + self.asset_balance * self.price # units of bsset
       bsset_spent         = bsset_balance0 - self.bsset_balance
       self.asset_balance += bsset_spent / self.price # units of asset
       if self.asset_balance < 0: self.asset_balance = 0
@@ -143,6 +160,16 @@ class exchange:
     if self.name is 'coinmetro':
       pass # response = api for trading
       # self.asset_balance = response.assett
+
+    if self.name is 'binanceUS':
+      uri_path = "/api/v3/rateLimit/order"
+      data = {
+          "recvWindow": self.recvWindow,
+          "timestamp": int(round(time.time() * 1000)) 
+      }
+
+      result = self.binanceus_request( uri_path, data )
+      print("GET {}: {}".format(uri_path, result))
 
   def update_history( self ):
     _time = -m.inf
@@ -194,9 +221,31 @@ class exchange:
     self.time0 = self._times[-1] # most recent timestamp from the recent historical data  
     
     return self.prices, self._times
-# if name is 'kucoin': # https://algotrading101.com/learn/kucoin-api-guide/
-# if name is 'coinbase':
-# if name is 'robbhinhood': !!!!!! fewer transaction fees ?????
+
+  # if name is 'binanceUS':
+
+  # Attaches auth headers and returns results of a POST request
+  def binanceus_request( self, uri_path, data ):
+    headers = {}
+    headers['X-MBX-APIKEY'] = self.api_key
+    signature = self.get_binanceus_signature(data, self.api_sec) 
+    payload={
+                **data,
+                "signature": signature,
+            }           
+    req = rq.get(( self.api_url + uri_path), params=payload, headers=headers)
+    return req.text
+  
+  def get_binanceus_signature(data, secret):
+    postdata = urllib.parse.urlencode(data)
+    message = postdata.encode()
+    byte_key = bytes(secret, 'UTF-8')
+    mac = hmac.new(byte_key, message, hashlib.sha256).hexdigest()
+    return mac
+  # if name is 'kucoin': # https://algotrading101.com/learn/kucoin-api-guide/
+  # if name is 'coinbase':
+  # if name is 'robbhinhood': !!!!!! fewer transaction fees ?????
+
 class data: # ?! put data class inside exchange class ?!
   def __init__( self, values, times, time_constant ):
     # ??? read the values from a csv file instead ???
