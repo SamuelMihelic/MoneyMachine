@@ -26,9 +26,9 @@ class exchange:
     self.numTrades  =           0  # running total of trades performed
     
     if self.name is 'local':
-      csv_bal = open(account_data_file+'.csv','w') # open for (over-)writing
+      csv_bal = open(self.bal_file+'.csv','w') # open for (over-)writing
     else:
-      csv_bal = open(account_data_file+'.csv','a') # open for appending
+      csv_bal = open(self.bal_file+'.csv','a') # open for appending
     
     self.bal_writer = csv.writer(csv_bal, delimiter=',')
     self.bal_writer.writerow(['Balances: '+self.asset     +' ['+self.bsset+']',
@@ -42,6 +42,9 @@ class exchange:
       self.asset_balance = 0 # asset units
       self.bsset_balance = 1 # bsset units 1 BTC in USD in 2012
       csv_log = open(self.log_file+'.csv','r') # open for reading
+      self.log_reader = csv.reader(csv_log, delimiter=',')
+      self.log_reader.__next__() # skip the first row (headers)
+      # for row in csv_reader:      
     else:
       csv_log = open(self.log_file+'.csv','a') # open for appending (writing at end)
       self.credentials = account_credentials
@@ -55,11 +58,7 @@ class exchange:
         print('Failed to find historical data log csv file in main directory')
       if self.name is 'binanceUS':
         self.api_url = "https://api.binance.us"
-        self.recvWindow = ''
-      
-    self.log_reader = csv.reader(csv_log, delimiter=',')
-    self.log_reader.__next__() # skip the first row (headers)
-    # for row in csv_reader:
+        self.recvWindow = '' # tinme to wait until canceling the order in the event that the order does not execute
 
     if self.name is 'local':
       log_row = self.log_reader.__next__()
@@ -71,8 +70,8 @@ class exchange:
   def authenticate( self ):
   # if self.name is 'local': no authentication
     if self.name is 'binanceUS':
-      self.api_key = input( 'Enter API key:' )
-      self.api_sec = input( 'Enter API sec:' )
+      self.api_key = input( 'Enter API key:' )  # api_key = "vmPUZE6mv9SD5VNHk4HlWFsOr6aKE2zvsw0MuIgwCIPy6utIco14y7Ju91duEh8A"
+      self.api_sec = input( 'Enter API sec:' )  # secret_key = "NhqPtmdSJYdKjVHjA7PZj4Mge3R5YNiP1e3UZjInClVN65XAbvqqM6A7H5fATj0j"
 
     if self.name is 'coinmetro': # https://documenter.getpostman.com/view/3653795/SVfWN6KS#intro
       if self.is_demo:
@@ -163,6 +162,7 @@ class exchange:
 
     if self.name is 'binanceUS':
       uri_path = "/api/v3/rateLimit/order"
+
       data = {
           "recvWindow": self.recvWindow,
           "timestamp": int(round(time.time() * 1000)) 
@@ -172,29 +172,30 @@ class exchange:
       print("GET {}: {}".format(uri_path, result))
 
   def update_history( self ):
-    _time = -m.inf
-    # !!!!!! start at top of file (just below headers)
-    # self.log_reader.line_num = 0 or self.log_file.seek(0,0)
-    # self.log_reader.__next__()
-    while _time < self.time0 - self.duration: # read past rows before the current time window 
-      log_row = self.log_reader.__next__()
-      if not( log_row[0] == 'UNIX TIME'): # !!! make sure this string encodes a number and not a header (break headers created whenever starting a new session to write to the log)
-        _time = float(log_row[ 0])*1000 # Timestamp [ms] # !!!! mke fxn don't copypasta
+    if self.name is 'local':
+      _time = -m.inf
+      # !!!!!! start at top of file (just below headers)
+      # self.log_reader.line_num = 0 or self.log_file.seek(0,0)
+      # self.log_reader.__next__()
+      while _time < self.time0 - self.duration: # read past rows before the current time window 
+        log_row = self.log_reader.__next__()
+        if not( log_row[0] == 'UNIX TIME'): # !!! make sure this string encodes a number and not a header (break headers created whenever starting a new session to write to the log)
+          _time = float(log_row[ 0])*1000 # Timestamp [ms] # !!!! mke fxn don't copypasta
 
-    self.price00  = float(log_row[-1])
+      self.price00  = float(log_row[-1])
 
-    _times = []
-    prices = []
-    while _time < self.time0: # read from start of time window up to current time
-      log_row = self.log_reader.__next__()
-      price = float(log_row[-1])      # Weighted_Price [bsset units]
-      _time = float(log_row[ 0])*1000 # Timestamp [ms]
-      if not( log_row[-1] == 'NaN' ):
-        prices.append( price ) 
-        _times.append( _time )
-      # duration = _times[-1] \
-      #          - _times[ 0] # total time of history read in and recorded
-    
+      _times = []
+      prices = []
+      while _time < self.time0: # read from start of time window up to current time
+        log_row = self.log_reader.__next__()
+        price = float(log_row[-1])      # Weighted_Price [bsset units]
+        _time = float(log_row[ 0])*1000 # Timestamp [ms]
+        if not( log_row[-1] == 'NaN' ):
+          prices.append( price ) 
+          _times.append( _time )
+        # duration = _times[-1] \
+        #          - _times[ 0] # total time of history read in and recorded
+      
     if self.name is 'coinmetro':
       # self.time0 = time.process_time() # get current time 
       start_time = str(int(self.time0-self.duration))
